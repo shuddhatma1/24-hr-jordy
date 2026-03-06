@@ -47,7 +47,7 @@ A self-serve portal where sports league owners sign up, configure an AI stats ch
 
 | Module | Status | Branch |
 |---|---|---|
-| M1 — Project Setup | in progress | `feat/m1-setup` |
+| M1 — Project Setup | done | `feat/m1-setup` |
 | M2 — MongoDB + Models | Not started | `feat/m2-mongodb` |
 | M3 — Auth | Not started | `feat/m3-auth` |
 | M4 — Bot Registry | Not started | `feat/m4-registry` |

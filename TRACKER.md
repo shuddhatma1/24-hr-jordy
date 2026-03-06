@@ -9,8 +9,8 @@
 | Item | Value |
 |---|---|
 | GitHub | https://github.com/shuddhatma1/24-hr-jordy.git |
-| Netlify URL | — (not yet connected) |
-| Last deployed | — |
+| Netlify URL | https://24-hr-jordy.netlify.app |
+| Last deployed | 2026-03-06 (M1) |
 
 ---
 
