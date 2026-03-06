@@ -25,6 +25,7 @@ export default function LoginPage() {
     if (result?.error) {
       setError('Invalid email or password')
     } else if (result?.ok) {
+      // TODO(m6): redirect to /dashboard instead if user already has a bot configured
       router.push('/setup')
     } else {
       setError('Login failed. Please try again.')

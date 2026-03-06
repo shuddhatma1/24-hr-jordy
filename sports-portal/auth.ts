@@ -1,8 +1,10 @@
 import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import { validateCredentials } from '@/lib/auth-helpers'
+import { authConfig } from '@/auth.config'
 
 export const { auth, signIn, signOut, handlers } = NextAuth({
+  ...authConfig,
   providers: [
     Credentials({
       credentials: {
@@ -18,10 +20,8 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
       },
     }),
   ],
-  pages: {
-    signIn: '/login',
-  },
   callbacks: {
+    ...authConfig.callbacks,
     jwt({ token, user }) {
       if (user) token.id = user.id
       return token
@@ -30,15 +30,5 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
       if (session.user) session.user.id = token.id as string
       return session
     },
-    // 'auth' renamed to 'session' to avoid shadowing the exported 'auth' above
-    authorized({ auth: session, request: { nextUrl } }) {
-      const isLoggedIn = !!session?.user
-      const isProtected = ['/dashboard', '/setup'].some((p) =>
-        nextUrl.pathname.startsWith(p)
-      )
-      if (isProtected) return isLoggedIn
-      return true
-    },
   },
-  session: { strategy: 'jwt' },
 })

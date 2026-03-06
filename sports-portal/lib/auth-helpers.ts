@@ -2,8 +2,11 @@ import bcrypt from 'bcryptjs'
 import { connectDB } from '@/lib/mongodb'
 import { User } from '@/lib/models/User'
 
-// Prevents timing oracle: ensures login always takes ~bcrypt time regardless of email existence
-const DUMMY_HASH = '$2a$12$dummyhashtopreventtimingattacksxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+// Prevents timing oracle: ensures login always takes ~bcrypt time regardless of email existence.
+// Must be a valid bcrypt hash (60 chars) — an invalid hash causes bcryptjs to return false
+// immediately without doing the full round, defeating the constant-time goal.
+// Generated with: await bcrypt.hash('dummy', 12)
+const DUMMY_HASH = '$2b$12$/kHqteN3pPH/PhOcNNLAseozx.Q.OGGBXn6Cdx5GdIGu.ji7oCOme'
 
 /**
  * Validates credentials against the database.
