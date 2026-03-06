@@ -19,8 +19,8 @@
 | # | Module | Status | Branch | Deployed | Notes |
 |---|---|---|---|---|---|
 | M1 | Project Setup | done | `feat/m1-setup` | No | |
-| M2 | MongoDB + Models | done | `feat/m2-mongodb` | No | PR #2 open |
-| M3 | Auth | not started | `feat/m3-auth` | No | |
+| M2 | MongoDB + Models | done | `feat/m2-mongodb` | Yes | PR #2 merged |
+| M3 | Auth | done | `feat/m3-auth` | No | |
 | M4 | Bot Registry | not started | `feat/m4-registry` | No | |
 | M5 | Wizard + Bot API | not started | `feat/m5-wizard` | No | |
 | M6 | Dashboard + Bot APIs | not started | `feat/m6-dashboard` | No | |
@@ -130,7 +130,7 @@
 ## Deployment Log
 | Date | Module | What shipped | Netlify build |
 |---|---|---|---|
-| — | — | — | — |
+| 2026-03-06 | M2 | MongoDB connection + User/Bot models | triggered |
 
 ---
 
