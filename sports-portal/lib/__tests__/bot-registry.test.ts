@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { getEndpointUrl, LEAGUES_BY_SPORT, SUPPORTED_SPORTS } from '@/lib/bot-registry'
+import {
+  getEndpointUrl,
+  LEAGUES_BY_SPORT,
+  SUPPORTED_SPORTS,
+  SPORT_LABELS,
+} from '@/lib/bot-registry'
 
 const MOCK_URL = 'http://localhost:3001/chat'
 
@@ -47,6 +52,11 @@ describe('getEndpointUrl', () => {
   it('returns null for empty strings', () => {
     expect(getEndpointUrl('', '')).toBeNull()
   })
+
+  it('returns null for valid combo when MOCK_BOT_URL is unset', () => {
+    delete process.env.MOCK_BOT_URL
+    expect(getEndpointUrl('soccer', 'english-premier-league')).toBeNull()
+  })
 })
 
 describe('LEAGUES_BY_SPORT', () => {
@@ -58,5 +68,24 @@ describe('LEAGUES_BY_SPORT', () => {
 
   it('has 3 soccer leagues', () => {
     expect(LEAGUES_BY_SPORT.soccer).toHaveLength(3)
+  })
+
+  it('every league value resolves to a non-null endpoint URL', () => {
+    for (const sport of SUPPORTED_SPORTS) {
+      for (const league of LEAGUES_BY_SPORT[sport]) {
+        expect(
+          getEndpointUrl(sport, league.value),
+          `${sport}:${league.value} should resolve`
+        ).not.toBeNull()
+      }
+    }
+  })
+})
+
+describe('SPORT_LABELS', () => {
+  it('has a label for every supported sport', () => {
+    for (const sport of SUPPORTED_SPORTS) {
+      expect(SPORT_LABELS[sport]).toBeTruthy()
+    }
   })
 })
