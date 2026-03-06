@@ -18,7 +18,7 @@
 
 | # | Module | Status | Branch | Deployed | Notes |
 |---|---|---|---|---|---|
-| M1 | Project Setup | not started | `feat/m1-setup` | No | |
+| M1 | Project Setup | done | `feat/m1-setup` | No | |
 | M2 | MongoDB + Models | not started | `feat/m2-mongodb` | No | |
 | M3 | Auth | not started | `feat/m3-auth` | No | |
 | M4 | Bot Registry | not started | `feat/m4-registry` | No | |

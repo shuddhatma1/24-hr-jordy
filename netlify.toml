@@ -1,6 +1,7 @@
 [build]
-  command = "cd sports-portal && npm run build"
-  publish = "sports-portal/.next"
+  base = "sports-portal"
+  command = "npm run build"
+  publish = ".next"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
