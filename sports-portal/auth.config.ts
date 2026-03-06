@@ -6,6 +6,9 @@ import type { NextAuthConfig } from 'next-auth'
 export const authConfig: NextAuthConfig = {
   // AUTH_SECRET is the v5 primary name; NEXTAUTH_SECRET kept for backwards compat
   secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
+  // Required when running behind a proxy (Netlify, Vercel, etc.)
+  // Without this, NextAuth v5 rejects requests with "server configuration" error
+  trustHost: true,
   pages: {
     signIn: '/login',
   },
