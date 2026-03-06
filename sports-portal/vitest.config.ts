@@ -1,0 +1,11 @@
+import { defineConfig } from 'vitest/config'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    // Default to node (correct for API route tests).
+    // Add `// @vitest-environment jsdom` at the top of component test files.
+    environment: 'node',
+  },
+})
