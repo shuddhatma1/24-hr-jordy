@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Environment variables
+.env.local
+.env*.local
+
+# Build output
+dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+
+# Claude / tooling artifacts
+.playwright-mcp/
+memory/
+
+# Misc experiments (not part of the portal)
+sports_chatbot.py
+requirements.txt
+*.png
+session-handoff.md
+PROJECT_CONTEXT.md
+skills-lock.json
