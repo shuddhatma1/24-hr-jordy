@@ -47,7 +47,7 @@ A self-serve portal where sports league owners sign up, configure an AI stats ch
 
 | Module | Status | Branch |
 |---|---|---|
-| M1 — Project Setup | Not started | `feat/m1-setup` |
+| M1 — Project Setup | in progress | `feat/m1-setup` |
 | M2 — MongoDB + Models | Not started | `feat/m2-mongodb` |
 | M3 — Auth | Not started | `feat/m3-auth` |
 | M4 — Bot Registry | Not started | `feat/m4-registry` |
@@ -184,6 +184,5 @@ Sports covered: Soccer (EPL, La Liga, Bundesliga), Basketball (NBA), NFL, Baseba
 
 ## Key Files to Reference
 
-- Full PRD: `/Users/ud/Documents/24 hr jordy/PRD.md`
-- Build plan: `/Users/ud/.claude/plans/lazy-pondering-steele.md`
-- This file: `/Users/ud/Documents/24 hr jordy/CONTEXT.md`
+- Full PRD: `PRD.md`
+- This file: `CONTEXT.md`

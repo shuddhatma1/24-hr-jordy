@@ -11,6 +11,13 @@ const MOCK_RESPONSES = [
   'I can help with that! Here is what the data shows for this season.',
 ]
 
+// Handle CORS preflight for browser-initiated requests
+app.options('/chat', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  res.sendStatus(204)
+})
+
 app.post('/chat', (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream')
   res.setHeader('Cache-Control', 'no-cache')
@@ -44,7 +51,14 @@ app.post('/chat', (req, res) => {
   })
 })
 
-const PORT = 3001
-app.listen(PORT, () => {
+const PORT = process.env.PORT || 3001
+const server = app.listen(PORT, () => {
   console.log(`Mock bot running on http://localhost:${PORT}`)
+})
+
+process.on('SIGINT', () => {
+  server.close(() => process.exit(0))
+})
+process.on('SIGTERM', () => {
+  server.close(() => process.exit(0))
 })
