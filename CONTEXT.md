@@ -48,7 +48,7 @@ A self-serve portal where sports league owners sign up, configure an AI stats ch
 | Module | Status | Branch |
 |---|---|---|
 | M1 — Project Setup | done | `feat/m1-setup` |
-| M2 — MongoDB + Models | Not started | `feat/m2-mongodb` |
+| M2 — MongoDB + Models | done | `feat/m2-mongodb` |
 | M3 — Auth | Not started | `feat/m3-auth` |
 | M4 — Bot Registry | Not started | `feat/m4-registry` |
 | M5 — Wizard + Bot API | Not started | `feat/m5-wizard` |
@@ -93,10 +93,14 @@ Branch strategy: `main` always deployable. One feature branch per module.
 │       ├── bots/[bot_id]/route.ts  # GET /api/bots/[bot_id]
 │       └── chat/route.ts           # POST /api/chat (streaming proxy)
 ├── lib/
-│   ├── mongodb.ts                  # Singleton connection
+│   ├── mongodb.ts                  # Singleton connection (global ?? cache pattern)
 │   ├── models/User.ts
 │   ├── models/Bot.ts
+│   ├── models/__tests__/models.test.ts
+│   ├── __tests__/mongodb.test.ts
 │   └── bot-registry.ts            # sport:league → endpoint URL map
+├── types/
+│   └── global.d.ts                # Global type for _mongoose hot-reload cache
 ├── components/
 │   ├── wizard/StepName.tsx
 │   ├── wizard/StepSport.tsx
@@ -147,19 +151,27 @@ Branch strategy: `main` always deployable. One feature branch per module.
 
 ## MongoDB Schema
 
-**`bots` collection:**
+**`bots` collection** (`lib/models/Bot.ts`):
 ```ts
 {
-  owner_id: String,        // NextAuth user id
+  owner_id: String,        // NextAuth user id; unique: true — enforces 1 bot per owner at DB level
   bot_name: String,
   sport: String,           // e.g. "soccer"
   league: String,          // e.g. "english-premier-league"
   bot_endpoint_url: String,// pre-built bot streaming endpoint
-  created_at: Date
+  created_at: Date         // snake_case; default: () => new Date()
 }
 ```
 
-**`users` collection:** managed automatically by NextAuth MongoDB adapter.
+**`users` collection** (`lib/models/User.ts`):
+```ts
+{
+  email: String,           // unique, lowercase, trim, match regex /^\S+@\S+\.\S+$/
+  passwordHash: String,
+  createdAt: Date          // camelCase; default: () => new Date()
+}
+```
+Note: `createdAt` (User) vs `created_at` (Bot) — intentional, both match their spec definitions.
 
 ---
 
