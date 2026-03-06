@@ -1,8 +1,6 @@
 import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
-import bcrypt from 'bcryptjs'
-import { connectDB } from '@/lib/mongodb'
-import { User } from '@/lib/models/User'
+import { validateCredentials } from '@/lib/auth-helpers'
 
 export const { auth, signIn, signOut, handlers } = NextAuth({
   providers: [
@@ -13,14 +11,10 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null
-        await connectDB()
-        const user = await User.findOne({
-          email: (credentials.email as string).toLowerCase(),
-        })
-        if (!user) return null
-        const ok = await bcrypt.compare(credentials.password as string, user.passwordHash)
-        if (!ok) return null
-        return { id: user._id.toString(), email: user.email }
+        return validateCredentials(
+          credentials.email as string,
+          credentials.password as string
+        )
       },
     }),
   ],
@@ -36,6 +30,7 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
       if (session.user) session.user.id = token.id as string
       return session
     },
+    // 'auth' renamed to 'session' to avoid shadowing the exported 'auth' above
     authorized({ auth: session, request: { nextUrl } }) {
       const isLoggedIn = !!session?.user
       const isProtected = ['/dashboard', '/setup'].some((p) =>

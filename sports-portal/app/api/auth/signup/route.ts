@@ -25,13 +25,16 @@ export async function POST(req: Request) {
 
   await connectDB()
 
-  const existing = await User.findOne({ email: email.toLowerCase() })
-  if (existing) {
-    return NextResponse.json({ error: 'Email already in use' }, { status: 409 })
-  }
-
   const passwordHash = await bcrypt.hash(password, 12)
-  await User.create({ email: email.toLowerCase(), passwordHash })
+  // TODO: add rate limiting before production (bcrypt at work factor 12 is CPU-heavy)
+  try {
+    await User.create({ email: email.toLowerCase(), passwordHash })
+  } catch (err: unknown) {
+    if ((err as { code?: number }).code === 11000) {
+      return NextResponse.json({ error: 'Email already in use' }, { status: 409 })
+    }
+    throw err
+  }
 
   return NextResponse.json({ message: 'Account created' }, { status: 201 })
 }

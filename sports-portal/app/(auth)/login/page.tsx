@@ -26,6 +26,8 @@ export default function LoginPage() {
       setError('Invalid email or password')
     } else if (result?.ok) {
       router.push('/setup')
+    } else {
+      setError('Login failed. Please try again.')
     }
   }
 
