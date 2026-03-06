@@ -4,6 +4,8 @@ import type { NextAuthConfig } from 'next-auth'
 // Used by middleware.ts (Edge Runtime). auth.ts extends this with the
 // Credentials provider (which imports mongoose and runs server-side only).
 export const authConfig: NextAuthConfig = {
+  // AUTH_SECRET is the v5 primary name; NEXTAUTH_SECRET kept for backwards compat
+  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
   pages: {
     signIn: '/login',
   },
