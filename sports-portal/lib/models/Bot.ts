@@ -15,7 +15,7 @@ const BotSchema = new Schema<IBot>({
   sport: { type: String, required: true },
   league: { type: String, required: true },
   bot_endpoint_url: { type: String, required: true },
-  created_at: { type: Date, default: Date.now },
+  created_at: { type: Date, default: () => new Date() },
 })
 
 export const Bot = models.Bot || model<IBot>('Bot', BotSchema)

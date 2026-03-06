@@ -19,7 +19,7 @@
 | # | Module | Status | Branch | Deployed | Notes |
 |---|---|---|---|---|---|
 | M1 | Project Setup | done | `feat/m1-setup` | No | |
-| M2 | MongoDB + Models | not started | `feat/m2-mongodb` | No | |
+| M2 | MongoDB + Models | done | `feat/m2-mongodb` | No | PR #2 open |
 | M3 | Auth | not started | `feat/m3-auth` | No | |
 | M4 | Bot Registry | not started | `feat/m4-registry` | No | |
 | M5 | Wizard + Bot API | not started | `feat/m5-wizard` | No | |
@@ -44,12 +44,12 @@
 - [ ] `.env.local` is gitignored and not committed
 
 ### M2 — MongoDB + Models
-- [ ] `lib/mongodb.ts` exports a singleton Mongoose connection (no multiple connections on hot reload)
-- [ ] `User` model has: email (unique, required), passwordHash (required), createdAt
-- [ ] `Bot` model has: owner_id, bot_name, sport, league, bot_endpoint_url, created_at
-- [ ] Connecting with a valid `MONGODB_URI` succeeds without errors in dev
-- [ ] Connecting with an invalid URI throws a clear error (not silent)
-- [ ] `npm run type-check` exits 0
+- [x] `lib/mongodb.ts` exports a singleton Mongoose connection (no multiple connections on hot reload)
+- [x] `User` model has: email (unique, required), passwordHash (required), createdAt
+- [x] `Bot` model has: owner_id, bot_name, sport, league, bot_endpoint_url, created_at
+- [x] Connecting with a valid `MONGODB_URI` succeeds without errors in dev
+- [x] Connecting with an invalid URI throws a clear error (not silent)
+- [x] `npm run type-check` exits 0
 
 ### M3 — Auth
 - [ ] `POST /api/auth/signup` with valid email+password creates a user and returns 201

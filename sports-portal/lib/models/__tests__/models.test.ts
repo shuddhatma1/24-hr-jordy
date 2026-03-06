@@ -49,6 +49,10 @@ describe('User model', () => {
     const user = await User.create({ email: 'UPPER@EXAMPLE.COM', passwordHash: 'hash' })
     expect(user.email).toBe('upper@example.com')
   })
+
+  it('rejects invalid email format', async () => {
+    await expect(User.create({ email: 'notanemail', passwordHash: 'hash' })).rejects.toThrow()
+  })
 })
 
 describe('Bot model', () => {
