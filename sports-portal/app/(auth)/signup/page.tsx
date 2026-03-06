@@ -18,6 +18,13 @@ export default function SignupPage() {
     const form = e.currentTarget
     const email = (form.elements.namedItem('email') as HTMLInputElement).value
     const password = (form.elements.namedItem('password') as HTMLInputElement).value
+    const confirm = (form.elements.namedItem('confirm') as HTMLInputElement).value
+
+    if (password !== confirm) {
+      setError('Passwords do not match')
+      setLoading(false)
+      return
+    }
 
     const res = await fetch('/api/auth/signup', {
       method: 'POST',
@@ -38,6 +45,7 @@ export default function SignupPage() {
       setError('Account created but login failed. Please log in.')
       router.push('/login')
     } else {
+      // TODO(m6): redirect to /dashboard instead if user already has a bot configured
       router.push('/setup')
     }
   }
@@ -71,6 +79,19 @@ export default function SignupPage() {
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <p className="mt-1 text-xs text-gray-500">At least 8 characters</p>
+        </div>
+        <div>
+          <label htmlFor="confirm" className="block text-sm font-medium text-gray-700 mb-1">
+            Confirm password
+          </label>
+          <input
+            id="confirm"
+            name="confirm"
+            type="password"
+            required
+            minLength={8}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
         </div>
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button
