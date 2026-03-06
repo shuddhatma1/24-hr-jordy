@@ -19,6 +19,7 @@ A self-serve portal where sports league owners sign up, configure an AI stats ch
 | Database | MongoDB Atlas (free tier) | No SQL, no migrations, fast prototype |
 | Auth | NextAuth.js v5 + credentials | Email/password, simplest for prototype |
 | Deployment | Netlify + `@netlify/plugin-nextjs` | User preference; plugin handles SSR/streaming |
+| Auth config split | `auth.config.ts` (edge) + `auth.ts` (server) | Mongoose uses `eval` — banned in Edge Runtime. Middleware must never import `auth.ts` |
 | Streaming | Native `fetch` + `ReadableStream` | Proxy bot stream directly, no extra library |
 | Styling | Tailwind CSS | Fast utility-first styling |
 | Package manager | npm | Standard |
@@ -37,7 +38,8 @@ A self-serve portal where sports league owners sign up, configure an AI stats ch
 | MongoDB user | `shuddhatma` |
 | MongoDB DB name | `sports-portal` |
 | MongoDB URI format | `mongodb+srv://shuddhatma:<pass>@cluster0.fuhufq5.mongodb.net/sports-portal?appName=Cluster0` |
-| Netlify | Connect to GitHub repo after M1 push |
+| Netlify | Connected — auto-deploys from `main` |
+| MongoDB Atlas IP Access List | `0.0.0.0/0` — required for Netlify functions (dynamic AWS IPs) |
 
 > Note: MongoDB password is stored only in `.env.local` (never committed).
 
@@ -49,7 +51,7 @@ A self-serve portal where sports league owners sign up, configure an AI stats ch
 |---|---|---|
 | M1 — Project Setup | done | `feat/m1-setup` |
 | M2 — MongoDB + Models | done | `feat/m2-mongodb` |
-| M3 — Auth | Not started | `feat/m3-auth` |
+| M3 — Auth | done | `feat/m3-auth` |
 | M4 — Bot Registry | Not started | `feat/m4-registry` |
 | M5 — Wizard + Bot API | Not started | `feat/m5-wizard` |
 | M6 — Dashboard + Bot APIs | Not started | `feat/m6-dashboard` |
@@ -194,7 +196,37 @@ Sports covered: Soccer (EPL, La Liga, Bundesliga), Basketball (NBA), NFL, Baseba
 
 ---
 
+---
+
+## M3 — Auth Implementation Notes
+
+**New files in `sports-portal/`:**
+- `auth.config.ts` — edge-safe config only: `trustHost`, `secret`, `pages`, `session: {strategy:'jwt'}`, `authorized` callback. No DB imports.
+- `auth.ts` — extends `authConfig`, adds Credentials provider + `jwt`/`session` callbacks. Imports mongoose chain — server-only.
+- `middleware.ts` — `export const { auth: middleware } = NextAuth(authConfig)` — imports `auth.config.ts` only, never `auth.ts`
+- `lib/auth-helpers.ts` — `validateCredentials(email, password)`: DB lookup + bcrypt compare. Timing oracle via valid DUMMY_HASH.
+- `types/next-auth.d.ts` — extends `Session` + `JWT` with `user.id: string`
+- `app/api/auth/[...nextauth]/route.ts` — one-liner: `export const { GET, POST } = handlers`
+- `app/api/auth/signup/route.ts` — POST: validates → bcrypt hash (work factor 12) → `User.create` → catches `code 11000` for 409
+- `components/providers.tsx` — `'use client'` `SessionProvider` wrapper
+- `app/(auth)/layout.tsx` — centered card layout
+- `app/(auth)/login/page.tsx` — `signIn('credentials', { redirect: false })` → push `/setup`
+- `app/(auth)/signup/page.tsx` — POST signup → auto signIn → push `/setup`. Includes confirm password field.
+
+**Critical deployment gotchas (learned in production):**
+1. **Edge Runtime crash** — `middleware.ts` must NEVER import `auth.ts`. Mongoose uses `eval`, banned in Edge Runtime. Always import `auth.config.ts` instead.
+2. **`trustHost: true`** — required in `authConfig` for NextAuth v5 behind Netlify/any proxy. Without it: "server configuration" 500 on all auth endpoints.
+3. **`AUTH_SECRET` vs `NEXTAUTH_SECRET`** — NextAuth v5 beta uses `AUTH_SECRET` as primary. Set `secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET` in `authConfig` to handle both.
+4. **MongoDB Atlas IP allowlist** — must add `0.0.0.0/0` for Netlify functions. Without it: signup/login times out (504) because Netlify uses dynamic AWS IPs.
+5. **DUMMY_HASH** — must be a real `bcrypt.hash()` output (60 chars). Invalid hash causes bcryptjs to skip the full computation, defeating timing oracle protection.
+6. **Post-login redirect** — both login and signup push to `/setup`. TODO(m6): redirect to `/dashboard` if user already has a bot.
+
+**Tests:** 25 passing — 4 mongodb, 13 models, 4 signup API, 4 auth-helpers.
+
+---
+
 ## Key Files to Reference
 
 - Full PRD: `PRD.md`
 - This file: `CONTEXT.md`
+- Next module: M4 — Bot Registry (`feat/m4-registry`)

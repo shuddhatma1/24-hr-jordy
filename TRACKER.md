@@ -10,7 +10,7 @@
 |---|---|
 | GitHub | https://github.com/shuddhatma1/24-hr-jordy.git |
 | Netlify URL | https://24-hr-jordy.netlify.app |
-| Last deployed | 2026-03-06 (M1) |
+| Last deployed | 2026-03-06 (M3) |
 
 ---
 
@@ -52,16 +52,16 @@
 - [x] `npm run type-check` exits 0
 
 ### M3 — Auth
-- [ ] `POST /api/auth/signup` with valid email+password creates a user and returns 201
-- [ ] `POST /api/auth/signup` with duplicate email returns 409
-- [ ] `POST /api/auth/signup` with missing fields returns 400
-- [ ] Passwords are stored hashed (bcrypt), never plaintext
-- [ ] Login via NextAuth credentials succeeds and sets a session cookie
-- [ ] Login with wrong password returns an error (not 500)
-- [ ] `GET /dashboard` without session redirects to `/login`
-- [ ] `GET /setup` without session redirects to `/login`
-- [ ] Session persists across page refresh
-- [ ] `npm run lint && npm run type-check && npm run test` all exit 0
+- [x] `POST /api/auth/signup` with valid email+password creates a user and returns 201
+- [x] `POST /api/auth/signup` with duplicate email returns 409
+- [x] `POST /api/auth/signup` with missing fields returns 400
+- [x] Passwords are stored hashed (bcrypt), never plaintext
+- [x] Login via NextAuth credentials succeeds and sets a session cookie
+- [x] Login with wrong password returns an error (not 500)
+- [x] `GET /dashboard` without session redirects to `/login`
+- [x] `GET /setup` without session redirects to `/login`
+- [x] Session persists across page refresh
+- [x] `npm run lint && npm run type-check && npm run test` all exit 0
 
 ### M4 — Bot Registry
 - [ ] `lib/bot-registry.ts` exports a `getEndpointUrl(sport, league)` function
@@ -132,6 +132,7 @@
 |---|---|---|---|
 | 2026-03-06 | M2 | MongoDB connection + User/Bot models | triggered |
 | 2026-03-06 | M3 | Auth — NextAuth v5, signup, route protection | triggered |
+| 2026-03-06 | M3 hotfix | auth.config.ts split (Edge Runtime), trustHost, AUTH_SECRET | triggered |
 
 ---
 
