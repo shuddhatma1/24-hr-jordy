@@ -16,6 +16,7 @@
     "react-dom": "^18"
   },
   "devDependencies": {
+    "@netlify/plugin-nextjs": "^5.15.8",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^20",
