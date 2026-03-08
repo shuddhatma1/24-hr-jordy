@@ -61,8 +61,7 @@ describe('POST /api/bots', () => {
     const res = await POST(makeReq({ bot_name: 'My Bot', sport: 'soccer', league: 'english-premier-league' }))
     expect(res.status).toBe(201)
     const data = await res.json()
-    expect(typeof data.bot_id).toBe('string')
-    expect(data.bot_id.length).toBeGreaterThan(0)
+    expect(data.bot_id).toMatch(/^[0-9a-f]{24}$/)
   })
 
   it('returns 409 when owner already has a bot', async () => {
@@ -97,5 +96,22 @@ describe('POST /api/bots', () => {
     expect(res.status).toBe(400)
     const data = await res.json()
     expect(data.error).toBe('Invalid league for this sport')
+  })
+
+  it('returns 400 for whitespace-only bot_name', async () => {
+    mockSession('owner-6')
+    const res = await POST(makeReq({ bot_name: '   ', sport: 'soccer', league: 'english-premier-league' }))
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toContain('bot_name')
+  })
+
+  it('returns 400 for bot_name exceeding 100 characters', async () => {
+    process.env.MOCK_BOT_URL = 'http://localhost:3001/chat'
+    mockSession('owner-7')
+    const res = await POST(makeReq({ bot_name: 'a'.repeat(101), sport: 'soccer', league: 'english-premier-league' }))
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toContain('100')
   })
 })

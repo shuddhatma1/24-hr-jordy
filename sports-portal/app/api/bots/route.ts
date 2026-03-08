@@ -23,6 +23,9 @@ export async function POST(req: Request) {
   if (!bot_name || typeof bot_name !== 'string' || bot_name.trim().length === 0) {
     return NextResponse.json({ error: 'bot_name is required' }, { status: 400 })
   }
+  if (bot_name.trim().length > 100) {
+    return NextResponse.json({ error: 'bot_name must be 100 characters or fewer' }, { status: 400 })
+  }
   if (!sport || typeof sport !== 'string' || !(SUPPORTED_SPORTS as readonly string[]).includes(sport)) {
     return NextResponse.json({ error: 'Invalid sport' }, { status: 400 })
   }

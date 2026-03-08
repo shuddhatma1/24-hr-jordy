@@ -44,22 +44,23 @@ export default function SetupPage() {
   async function handleSubmit() {
     setError('')
     setLoading(true)
-
-    const res = await fetch('/api/bots', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ bot_name: botName.trim(), sport, league }),
-    })
-
-    setLoading(false)
-
-    if (!res.ok) {
-      const data = await res.json()
-      setError(data.error ?? 'Something went wrong')
-      return
+    try {
+      const res = await fetch('/api/bots', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bot_name: botName.trim(), sport, league }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        setError(data.error ?? 'Something went wrong')
+        return
+      }
+      router.push('/dashboard')
+    } catch {
+      setError('Network error. Please try again.')
+    } finally {
+      setLoading(false)
     }
-
-    router.push('/dashboard')
   }
 
   return (
@@ -99,7 +100,7 @@ export default function SetupPage() {
         {step === 1 && (
           <>
             <h1 className="text-2xl font-semibold text-gray-900 mb-6">Name your bot</h1>
-            <div className="space-y-4">
+            <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); handleNext() }}>
               <div>
                 <label htmlFor="bot_name" className="block text-sm font-medium text-gray-700 mb-1">
                   Bot name
@@ -110,17 +111,18 @@ export default function SetupPage() {
                   value={botName}
                   onChange={(e) => setBotName(e.target.value)}
                   placeholder="e.g. City FC Bot"
+                  maxLength={100}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               {error && <p className="text-sm text-red-600">{error}</p>}
               <button
-                onClick={handleNext}
+                type="submit"
                 className="w-full py-2 px-4 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
               >
                 Next →
               </button>
-            </div>
+            </form>
           </>
         )}
 
@@ -128,7 +130,7 @@ export default function SetupPage() {
         {step === 2 && (
           <>
             <h1 className="text-2xl font-semibold text-gray-900 mb-6">Pick a sport</h1>
-            <div className="space-y-4">
+            <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); handleNext() }}>
               <div>
                 <label htmlFor="sport" className="block text-sm font-medium text-gray-700 mb-1">
                   Sport
@@ -149,19 +151,20 @@ export default function SetupPage() {
               {error && <p className="text-sm text-red-600">{error}</p>}
               <div className="flex gap-3">
                 <button
+                  type="button"
                   onClick={handleBack}
                   className="flex-1 py-2 px-4 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50"
                 >
                   ← Back
                 </button>
                 <button
-                  onClick={handleNext}
+                  type="submit"
                   className="flex-1 py-2 px-4 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
                 >
                   Next →
                 </button>
               </div>
-            </div>
+            </form>
           </>
         )}
 
@@ -169,7 +172,7 @@ export default function SetupPage() {
         {step === 3 && (
           <>
             <h1 className="text-2xl font-semibold text-gray-900 mb-6">Pick a league</h1>
-            <div className="space-y-4">
+            <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); void handleSubmit() }}>
               <div>
                 <label htmlFor="league" className="block text-sm font-medium text-gray-700 mb-1">
                   League
@@ -190,6 +193,7 @@ export default function SetupPage() {
               {error && <p className="text-sm text-red-600">{error}</p>}
               <div className="flex gap-3">
                 <button
+                  type="button"
                   onClick={handleBack}
                   disabled={loading}
                   className="flex-1 py-2 px-4 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -197,14 +201,14 @@ export default function SetupPage() {
                   ← Back
                 </button>
                 <button
-                  onClick={handleSubmit}
+                  type="submit"
                   disabled={loading}
                   className="flex-1 py-2 px-4 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Setting up...' : 'Set up my bot'}
                 </button>
               </div>
-            </div>
+            </form>
           </>
         )}
 
