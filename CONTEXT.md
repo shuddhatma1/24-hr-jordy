@@ -52,8 +52,8 @@ A self-serve portal where sports league owners sign up, configure an AI stats ch
 | M1 — Project Setup | done | `feat/m1-setup` |
 | M2 — MongoDB + Models | done | `feat/m2-mongodb` |
 | M3 — Auth | done | `feat/m3-auth` |
-| M4 — Bot Registry | Not started | `feat/m4-registry` |
-| M5 — Wizard + Bot API | Not started | `feat/m5-wizard` |
+| M4 — Bot Registry | done | `feat/m4-registry` |
+| M5 — Wizard + Bot API | done | `feat/m5-wizard` |
 | M6 — Dashboard + Bot APIs | Not started | `feat/m6-dashboard` |
 | M7 — Chat Proxy API | Not started | `feat/m7-chat-api` |
 | M8 — Chat UI | Not started | `feat/m8-chat-ui` |
@@ -225,8 +225,52 @@ Sports covered: Soccer (EPL, La Liga, Bundesliga), Basketball (NBA), NFL, Baseba
 
 ---
 
+## M4 — Bot Registry Implementation Notes
+
+**New files in `sports-portal/`:**
+- `lib/bot-registry.ts` — exports `getEndpointUrl(sport, league): string | null`, `LEAGUES_BY_SPORT`, `SPORT_LABELS`, `SUPPORTED_SPORTS`
+- `lib/__tests__/bot-registry.test.ts` — 14 unit tests
+
+**Key design decisions:**
+- Registry values are **thunk functions** (not static strings) so `process.env.MOCK_BOT_URL` is read at call-time, not module load time. This lets tests override the env var with `beforeEach`/`afterEach` without module reloading.
+- `LEAGUES_BY_SPORT` and `SPORT_LABELS` are typed as `Record<Sport, ...>` — TypeScript enforces exhaustiveness when new sports are added to `SUPPORTED_SPORTS`.
+- `nfl:nfl` key is intentional — NFL has no sub-leagues. Sport = `"nfl"`, league value = `"nfl"`. Wizard in M5 will show both steps but "NFL" is the only option under sport NFL.
+- `getEndpointUrl` returns `null` (never throws) for unsupported combos or unset env var.
+- In production: replace `MOCK_BOT_URL` with per-league env vars (e.g. `EPL_BOT_URL`). Each registry entry would read its own var.
+
+**6 supported entries:** EPL, La Liga, Bundesliga, NBA, NFL, MLB
+
+**Tests:** 36 total (25 existing + 11 new) — all passing. `npm run lint`, `type-check`, `test` all exit 0.
+
+**PR review gaps identified (from session 2026-03-07):**
+- No GitHub Actions CI — "no checks reported" on PR. Linting/tests only verified locally.
+- `REGISTRY` and `LEAGUES_BY_SPORT` have no compile-time sync enforcement — test `every league value resolves to a non-null endpoint URL` acts as the guard.
+
+---
+
+## M5 — Wizard + Bot API Implementation Notes
+
+**New files in `sports-portal/`:**
+- `app/api/bots/route.ts` — `POST /api/bots`: auth check → validate body → `getEndpointUrl` → `Bot.create` → return `{ bot_id }`
+- `app/setup/page.tsx` — 3-step wizard (`'use client'`): name → sport → league, submits to `/api/bots`, redirects to `/dashboard`
+- `app/api/bots/__tests__/bots.test.ts` — 6 unit tests
+
+**Key design decisions:**
+- Auth check (`await auth()`) comes before body parsing — fail fast before any DB work
+- `connectDB()` called after all validation — DB connection only on valid requests
+- Sport/league validated against `SUPPORTED_SPORTS`/`LEAGUES_BY_SPORT`, then `getEndpointUrl` as a second gate (defence-in-depth; distinct error messages at each layer)
+- `Bot.create` catches `code 11000` (unique `owner_id`) → 409; all other DB errors rethrow
+- Wizard initializes sport/league to first valid options — select is always in a valid state, no "Pick one" blank option
+- `handleBack` uses `Math.max(1, step - 1)` — concise and safe against step underflow
+
+**Tests:** 45 total (39 existing + 6 new) — all passing. Lint, type-check, test all exit 0.
+
+**Known gap deferred to M6:** `/setup` does not redirect to `/dashboard` if owner already has a bot on page load (needs `GET /api/bots/me` which ships in M6). For now, re-submitting the wizard shows the 409 error inline.
+
+---
+
 ## Key Files to Reference
 
 - Full PRD: `PRD.md`
 - This file: `CONTEXT.md`
-- Next module: M4 — Bot Registry (`feat/m4-registry`)
+- Next module: M6 — Dashboard + Bot APIs (`feat/m6-dashboard`)
