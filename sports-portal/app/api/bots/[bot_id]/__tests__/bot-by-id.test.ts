@@ -64,7 +64,7 @@ describe('GET /api/bots/[bot_id]', () => {
     expect(data.league).toBe('english-premier-league')
   })
 
-  it('does not return bot_endpoint_url, owner_id, or _id', async () => {
+  it('does not return bot_endpoint_url, owner_id, _id, or created_at', async () => {
     const bot = await Bot.create({
       owner_id: 'owner-2',
       bot_name: 'NBA Bot',
@@ -73,10 +73,12 @@ describe('GET /api/bots/[bot_id]', () => {
       bot_endpoint_url: 'http://localhost:3001/chat',
     })
     const res = await GET(fakeReq, makeParams(bot._id.toString()))
+    expect(res.status).toBe(200)
     const data = await res.json()
     expect(data.bot_endpoint_url).toBeUndefined()
     expect(data.owner_id).toBeUndefined()
     expect(data._id).toBeUndefined()
+    expect(data.created_at).toBeUndefined()
   })
 
   it('returns 500 on DB error', async () => {

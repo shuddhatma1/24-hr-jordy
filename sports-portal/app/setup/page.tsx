@@ -14,7 +14,8 @@ export default function SetupPage() {
   const [checking, setChecking] = useState(true)
 
   useEffect(() => {
-    fetch('/api/bots/me')
+    const controller = new AbortController()
+    fetch('/api/bots/me', { signal: controller.signal })
       .then((res) => {
         if (res.ok) {
           router.push('/dashboard')
@@ -24,7 +25,11 @@ export default function SetupPage() {
           setChecking(false)
         }
       })
-      .catch(() => setChecking(false))
+      .catch((err: unknown) => {
+        if ((err as { name?: string }).name === 'AbortError') return
+        setChecking(false)
+      })
+    return () => controller.abort()
   }, [router])
   const [botName, setBotName] = useState('')
   const [sport, setSport] = useState<Sport>(SUPPORTED_SPORTS[0])

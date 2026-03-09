@@ -73,7 +73,7 @@ describe('GET /api/bots/me', () => {
     expect(data.league).toBe('english-premier-league')
   })
 
-  it('does not return bot_endpoint_url or owner_id', async () => {
+  it('does not return bot_endpoint_url, owner_id, or created_at', async () => {
     mockSession('owner-3')
     await Bot.create({
       owner_id: 'owner-3',
@@ -83,9 +83,11 @@ describe('GET /api/bots/me', () => {
       bot_endpoint_url: 'http://localhost:3001/chat',
     })
     const res = await GET()
+    expect(res.status).toBe(200)
     const data = await res.json()
     expect(data.bot_endpoint_url).toBeUndefined()
     expect(data.owner_id).toBeUndefined()
+    expect(data.created_at).toBeUndefined()
   })
 
   it('returns 500 on DB error', async () => {

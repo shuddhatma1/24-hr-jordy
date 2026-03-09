@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import { SPORT_LABELS, LEAGUES_BY_SPORT, Sport } from '@/lib/bot-registry'
@@ -17,15 +17,21 @@ function getLeagueLabel(sport: string, league: string): string {
   return leagues.find((l) => l.value === league)?.label ?? league
 }
 
+function getChatUrl(botId: string): string {
+  return `${process.env.NEXT_PUBLIC_APP_URL}/chat/${botId}`
+}
+
 export default function DashboardPage() {
   const router = useRouter()
   const [bot, setBot] = useState<BotData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    fetch('/api/bots/me')
+    const controller = new AbortController()
+    fetch('/api/bots/me', { signal: controller.signal })
       .then(async (res) => {
         if (res.status === 401) {
           router.push('/login')
@@ -44,22 +50,27 @@ export default function DashboardPage() {
         setBot(data)
         setLoading(false)
       })
-      .catch(() => {
+      .catch((err: unknown) => {
+        if ((err as { name?: string }).name === 'AbortError') return
         setError('Network error. Please refresh.')
         setLoading(false)
       })
+    return () => controller.abort()
   }, [router])
 
-  function getChatUrl(botId: string): string {
-    return `${window.location.origin}/chat/${botId}`
-  }
+  useEffect(() => {
+    return () => {
+      if (copyTimer.current) clearTimeout(copyTimer.current)
+    }
+  }, [])
 
   async function handleCopyUrl() {
     if (!bot) return
     try {
       await navigator.clipboard.writeText(getChatUrl(bot.bot_id))
+      if (copyTimer.current) clearTimeout(copyTimer.current)
       setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      copyTimer.current = setTimeout(() => setCopied(false), 2000)
     } catch {
       setError('Could not copy to clipboard.')
     }
