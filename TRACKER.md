@@ -10,7 +10,7 @@
 |---|---|
 | GitHub | https://github.com/shuddhatma1/24-hr-jordy.git |
 | Netlify URL | https://24-hr-jordy.netlify.app |
-| Last deployed | 2026-03-09 (M6 + M7 merged to main, Netlify deploying) |
+| Last deployed | 2026-03-09 (M6 + M7 deployed) |
 
 ---
 
@@ -136,8 +136,9 @@
 | 2026-03-07 | M4 | Bot registry — sport/league → endpoint map, 14 tests | triggered |
 | 2026-03-08 | M5 | Wizard UI + POST /api/bots — 3-step setup, 6 tests | triggered |
 | 2026-03-09 | M5 post-review | connectDB fix, 401 redirect, text visibility, 49 tests | triggered |
-| 2026-03-09 | M6 | Dashboard + GET /api/bots/me + GET /api/bots/[bot_id], setup redirect fix, post-review fixes (URL fallback, error escape, loading state, findById), 59 tests | PR #7 open |
-| 2026-03-09 | M7 | POST /api/chat streaming proxy — 50kb limit, 502 on unreachable endpoint, direct stream pipe, 66 tests | PR #8 pending |
+| 2026-03-09 | M6 | Dashboard + GET /api/bots/me + GET /api/bots/[bot_id], setup redirect fix, post-review fixes (URL fallback, error escape, loading state, findById), 59 tests | triggered |
+| 2026-03-09 | M7 | POST /api/chat streaming proxy — 50kb limit, 502 on unreachable endpoint, direct stream pipe, 66 tests | triggered |
+| 2026-03-09 | M7 post-review | null body guard (400 not 500), parseInt→Number, botRes.body null check, X-Accel-Buffering header, fetch timeout TODO, 2 new tests, 68 tests total | triggered |
 
 ---
 
