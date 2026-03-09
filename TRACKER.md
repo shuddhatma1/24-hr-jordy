@@ -10,7 +10,7 @@
 |---|---|
 | GitHub | https://github.com/shuddhatma1/24-hr-jordy.git |
 | Netlify URL | https://24-hr-jordy.netlify.app |
-| Last deployed | 2026-03-09 (M6 pending deploy) |
+| Last deployed | 2026-03-09 (M6 + M7 merged to main, Netlify deploying) |
 
 ---
 
@@ -23,8 +23,8 @@
 | M3 | Auth | done | `feat/m3-auth` | Yes | PR #3 + #4 merged |
 | M4 | Bot Registry | done | `feat/m4-registry` | Yes | PR #5 merged |
 | M5 | Wizard + Bot API | done | `feat/m5-wizard` | Yes | PR #6 merged |
-| M6 | Dashboard + Bot APIs | done | `feat/m6-dashboard` | No | PR #7 open |
-| M7 | Chat Proxy API | done | `feat/m7-chat-api` | No | PR #8 pending |
+| M6 | Dashboard + Bot APIs | done | `feat/m6-dashboard` | Yes | PR #7 merged |
+| M7 | Chat Proxy API | done | `feat/m7-chat-api` | Yes | PR #8 merged |
 | M8 | Chat UI | not started | `feat/m8-chat-ui` | No | |
 | M9 | Polish | not started | `feat/m9-polish` | No | |
 
