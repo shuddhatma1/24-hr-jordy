@@ -13,5 +13,7 @@ export default defineConfig({
     // Default to node (correct for API route tests).
     // Add `// @vitest-environment jsdom` at the top of component test files.
     environment: 'node',
+    globals: true, // required for @testing-library/react auto-cleanup
+    setupFiles: ['./vitest.setup.ts'],
   },
 })

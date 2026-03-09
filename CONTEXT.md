@@ -56,7 +56,7 @@ A self-serve portal where sports league owners sign up, configure an AI stats ch
 | M5 — Wizard + Bot API | done | `feat/m5-wizard` | PR #6 merged |
 | M6 — Dashboard + Bot APIs | done | `feat/m6-dashboard` | PR #7 merged 2026-03-09 |
 | M7 — Chat Proxy API | done | `feat/m7-chat-api` | PR #8 merged 2026-03-09 |
-| M8 — Chat UI | Not started | `feat/m8-chat-ui` |
+| M8 — Chat UI | done | `feat/m8-chat-ui` |
 | M9 — Polish | Not started | `feat/m9-polish` |
 
 > Update module status here as work progresses.
