@@ -10,7 +10,7 @@
 |---|---|
 | GitHub | https://github.com/shuddhatma1/24-hr-jordy.git |
 | Netlify URL | https://24-hr-jordy.netlify.app |
-| Last deployed | 2026-03-07 (M4) |
+| Last deployed | 2026-03-09 (M5) |
 
 ---
 
@@ -22,7 +22,7 @@
 | M2 | MongoDB + Models | done | `feat/m2-mongodb` | Yes | PR #2 merged |
 | M3 | Auth | done | `feat/m3-auth` | Yes | PR #3 + #4 merged |
 | M4 | Bot Registry | done | `feat/m4-registry` | Yes | PR #5 merged |
-| M5 | Wizard + Bot API | done | `feat/m5-wizard` | No | |
+| M5 | Wizard + Bot API | done | `feat/m5-wizard` | Yes | PR #6 merged |
 | M6 | Dashboard + Bot APIs | not started | `feat/m6-dashboard` | No | |
 | M7 | Chat Proxy API | not started | `feat/m7-chat-api` | No | |
 | M8 | Chat UI | not started | `feat/m8-chat-ui` | No | |
@@ -135,6 +135,7 @@
 | 2026-03-06 | M3 hotfix | auth.config.ts split (Edge Runtime), trustHost, AUTH_SECRET | triggered |
 | 2026-03-07 | M4 | Bot registry — sport/league → endpoint map, 14 tests | triggered |
 | 2026-03-08 | M5 | Wizard UI + POST /api/bots — 3-step setup, 6 tests | triggered |
+| 2026-03-09 | M5 post-review | connectDB fix, 401 redirect, text visibility, 49 tests | triggered |
 
 ---
 
