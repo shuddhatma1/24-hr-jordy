@@ -54,8 +54,8 @@ A self-serve portal where sports league owners sign up, configure an AI stats ch
 | M3 — Auth | done | `feat/m3-auth` |
 | M4 — Bot Registry | done | `feat/m4-registry` |
 | M5 — Wizard + Bot API | done | `feat/m5-wizard` | PR #6 open; post-review fixes applied 2026-03-09 |
-| M6 — Dashboard + Bot APIs | Not started | `feat/m6-dashboard` |
-| M7 — Chat Proxy API | Not started | `feat/m7-chat-api` |
+| M6 — Dashboard + Bot APIs | done | `feat/m6-dashboard` | PR #7 open; post-review fixes applied 2026-03-09 |
+| M7 — Chat Proxy API | done | `feat/m7-chat-api` | PR #8 pending |
 | M8 — Chat UI | Not started | `feat/m8-chat-ui` |
 | M9 — Polish | Not started | `feat/m9-polish` |
 
@@ -219,7 +219,7 @@ Sports covered: Soccer (EPL, La Liga, Bundesliga), Basketball (NBA), NFL, Baseba
 3. **`AUTH_SECRET` vs `NEXTAUTH_SECRET`** — NextAuth v5 beta uses `AUTH_SECRET` as primary. Set `secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET` in `authConfig` to handle both.
 4. **MongoDB Atlas IP allowlist** — must add `0.0.0.0/0` for Netlify functions. Without it: signup/login times out (504) because Netlify uses dynamic AWS IPs.
 5. **DUMMY_HASH** — must be a real `bcrypt.hash()` output (60 chars). Invalid hash causes bcryptjs to skip the full computation, defeating timing oracle protection.
-6. **Post-login redirect** — both login and signup push to `/setup`. TODO(m6): redirect to `/dashboard` if user already has a bot.
+6. **Post-login redirect** — login and signup push to `/setup`. If the owner already has a bot, `/setup` redirects to `/dashboard` on mount (resolved in M6).
 
 **Tests:** 25 passing — 4 mongodb, 13 models, 4 signup API, 4 auth-helpers.
 
@@ -282,7 +282,50 @@ Sports covered: Soccer (EPL, La Liga, Bundesliga), Basketball (NBA), NFL, Baseba
 
 **Known flaky test:** "returns 409 when owner already has a bot" can fail on cold start — Mongoose creates unique indexes asynchronously; index may not exist for the very first duplicate write. Passes consistently on re-run. Pre-existing, not introduced by fixes.
 
-**Known gap deferred to M6:** `/setup` does not redirect to `/dashboard` if owner already has a bot on page load (needs `GET /api/bots/me` which ships in M6). For now, re-submitting the wizard shows the 409 error inline.
+**Known gap deferred to M6:** CLOSED — `/setup` now redirects to `/dashboard` on mount if owner already has a bot.
+
+---
+
+## M6 — Dashboard + Bot APIs Implementation Notes
+
+**New files in `sports-portal/`:**
+- `app/api/bots/me/route.ts` — `GET /api/bots/me`: session check → `Bot.findOne({ owner_id })` → returns `{ bot_id, bot_name, sport, league }`; 401/404/500
+- `app/api/bots/[bot_id]/route.ts` — `GET /api/bots/[bot_id]` (public): `mongoose.Types.ObjectId.isValid()` check → `Bot.findById(bot_id)` → returns `{ bot_name, sport, league }` only; 404/500
+- `app/dashboard/page.tsx` — `'use client'`: fetches `/api/bots/me` on mount; shows bot details, copy URL ("Copied!" feedback), Preview Chatbot link, logout via `signOut({ callbackUrl: '/login' })`; uses `SPORT_LABELS`/`LEAGUES_BY_SPORT` for human-readable labels
+- `app/setup/page.tsx` — added `useEffect` on mount: if `/api/bots/me` returns 200 → `router.push('/dashboard')`; shows "Loading..." during check
+
+**Key patterns:**
+- `GET /api/bots/[bot_id]` uses `Bot.findById(bot_id)` — idiomatic Mongoose; ObjectId validated with `mongoose.Types.ObjectId.isValid()` before DB query
+- `bot_endpoint_url` and `owner_id` are NEVER returned in API responses (internal fields)
+- `getChatUrl` uses `process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin` — safe fallback if env var is unset at build time
+- Dashboard error state includes a "Log out" button — prevents user being trapped with no escape
+- `AbortController` used in both dashboard and setup effects — prevents stale state updates on unmount
+- `copyTimer` stored in `useRef` — cleared on unmount and on re-click
+- All `useState` declarations grouped above `useEffect` in setup page
+- Synchronous params in Next.js 14: `{ params }: { params: { bot_id: string } }` — NOT async (that's Next.js 15+)
+
+**Tests:** 59 total (49 existing + 10 new: 5 for `/api/bots/me`, 5 for `/api/bots/[bot_id]`)
+
+**CI:** `.github/workflows/ci.yml` added — runs lint + type-check + test on every push and PR to `main`.
+
+---
+
+## M7 — Chat Proxy API Implementation Notes
+
+**New files in `sports-portal/`:**
+- `app/api/chat/route.ts` — `POST /api/chat` (public): 50kb body limit → JSON parse → validate `bot_id`/`messages` → `Bot.findById` → `fetch(bot.bot_endpoint_url, { messages })` → pipe `ReadableStream` response back with `Content-Type: text/event-stream`; 400/404/413/502/500
+- `app/api/chat/__tests__/chat.test.ts` — 7 unit tests
+
+**Key patterns:**
+- Body size enforced in two passes: `Content-Length` header fast-path, then `TextEncoder().encode(raw).byteLength` definitive check
+- `fetch` to bot endpoint wrapped in inner try/catch — throws → 502; non-ok response → 502
+- `botRes.body` (`ReadableStream<Uint8Array>`) passed directly as `new Response(botRes.body, ...)` — zero buffering
+- `bot_endpoint_url` sourced exclusively from DB — never from user input
+- No auth required — `/api/chat` is public (fan-facing)
+- Default Node.js runtime (no `export const runtime = 'edge'`) — consistent with all other routes; `@netlify/plugin-nextjs` v5 handles streaming
+- Invalid ObjectId → 404 (consistent with `GET /api/bots/[bot_id]` pattern)
+
+**Tests:** 66 total (59 existing + 7 new) — all passing. Lint, type-check, test all exit 0.
 
 ---
 
@@ -290,4 +333,4 @@ Sports covered: Soccer (EPL, La Liga, Bundesliga), Basketball (NBA), NFL, Baseba
 
 - Full PRD: `PRD.md`
 - This file: `CONTEXT.md`
-- Next module: M6 — Dashboard + Bot APIs (`feat/m6-dashboard`)
+- Next module: M8 — Chat UI (`feat/m8-chat-ui`)
