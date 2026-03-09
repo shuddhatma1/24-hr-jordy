@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { SUPPORTED_SPORTS, SPORT_LABELS, LEAGUES_BY_SPORT, Sport } from '@/lib/bot-registry'
 
@@ -11,6 +11,21 @@ const STEP_LABELS: Record<Step, string> = { 1: 'Name', 2: 'Sport', 3: 'League' }
 export default function SetupPage() {
   const router = useRouter()
   const [step, setStep] = useState<Step>(1)
+  const [checking, setChecking] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/bots/me')
+      .then((res) => {
+        if (res.ok) {
+          router.push('/dashboard')
+        } else if (res.status === 401) {
+          router.push('/login')
+        } else {
+          setChecking(false)
+        }
+      })
+      .catch(() => setChecking(false))
+  }, [router])
   const [botName, setBotName] = useState('')
   const [sport, setSport] = useState<Sport>(SUPPORTED_SPORTS[0])
   const [league, setLeague] = useState(LEAGUES_BY_SPORT[SUPPORTED_SPORTS[0]][0].value)
@@ -66,6 +81,8 @@ export default function SetupPage() {
       setLoading(false)
     }
   }
+
+  if (checking) return null
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
