@@ -41,6 +41,7 @@ export default function ChatInput({ onSend, disabled }: Props) {
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
+          aria-label="Ask a question"
           placeholder="Type a question..."
           disabled={disabled}
           maxLength={1000}

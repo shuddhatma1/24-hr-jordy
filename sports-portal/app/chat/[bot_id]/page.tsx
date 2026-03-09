@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import type { Metadata } from 'next'
 import mongoose from 'mongoose'
 import { connectDB } from '@/lib/mongodb'
@@ -8,17 +9,40 @@ import ChatWindow from '@/components/chat/ChatWindow'
 // Always render dynamically — bot data must be fresh on every request
 export const dynamic = 'force-dynamic'
 
-export const metadata: Metadata = {
-  title: 'Sports Chatbot',
-}
-
 interface PageProps {
   params: { bot_id: string }
 }
 
+type BotData = { bot_name: string; sport: string; league: string }
+
+/**
+ * React.cache deduplicates this call within a single render tree so
+ * generateMetadata and ChatPage share one DB round-trip instead of two.
+ * Throws on DB error (caller catches); returns null when bot is not found.
+ */
+const fetchBotData = cache(async (bot_id: string): Promise<BotData | null> => {
+  await connectDB()
+  return Bot.findById(bot_id)
+    .select('bot_name sport league')
+    .lean<BotData>()
+})
+
 function getLeagueLabel(sport: string, league: string): string {
   const leagues = LEAGUES_BY_SPORT[sport as Sport] ?? []
   return leagues.find((l) => l.value === league)?.label ?? league
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  if (!mongoose.Types.ObjectId.isValid(params.bot_id)) {
+    return { title: 'Sports Chatbot' }
+  }
+  try {
+    const bot = await fetchBotData(params.bot_id)
+    if (!bot) return { title: 'Sports Chatbot' }
+    return { title: `${bot.bot_name} — Sports Chatbot` }
+  } catch {
+    return { title: 'Sports Chatbot' }
+  }
 }
 
 export default async function ChatPage({ params }: PageProps) {
@@ -29,21 +53,17 @@ export default async function ChatPage({ params }: PageProps) {
   }
 
   try {
-    await connectDB()
-    const bot = await Bot.findById(bot_id).select('bot_name sport league')
+    const bot = await fetchBotData(bot_id)
     if (!bot) {
       return <BotNotFound />
     }
 
-    const leagueLabel = getLeagueLabel(
-      bot.sport as string,
-      bot.league as string
-    )
+    const leagueLabel = getLeagueLabel(bot.sport, bot.league)
 
     return (
       <ChatWindow
         botId={bot_id}
-        botName={bot.bot_name as string}
+        botName={bot.bot_name}
         leagueLabel={leagueLabel}
       />
     )

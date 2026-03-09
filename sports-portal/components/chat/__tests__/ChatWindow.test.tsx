@@ -417,9 +417,7 @@ describe('ChatWindow — error handling', () => {
   it('does not show error on AbortError (unmount / navigation)', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockRejectedValue(
-        Object.assign(new Error('Aborted'), { name: 'AbortError' })
-      )
+      vi.fn().mockRejectedValue(new DOMException('Aborted', 'AbortError'))
     )
     render(<ChatWindow botId="abc" botName="Bot" leagueLabel="EPL" />)
 
@@ -464,8 +462,12 @@ describe('ChatWindow — multi-turn conversation', () => {
       const body = JSON.parse(calls[0][1]!.body as string) as {
         messages: { role: string; content: string }[]
       }
-      // Second call should include prior user message and bot reply
-      expect(body.messages.length).toBeGreaterThanOrEqual(2)
+      // Second call must carry the complete prior exchange with correct roles
+      expect(body.messages).toEqual([
+        { role: 'user', content: 'Who scored?' },
+        { role: 'assistant', content: 'Salah' },
+        { role: 'user', content: 'And goals?' },
+      ])
     })
   })
 })
