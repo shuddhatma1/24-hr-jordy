@@ -10,7 +10,7 @@
 |---|---|
 | GitHub | https://github.com/shuddhatma1/24-hr-jordy.git |
 | Netlify URL | https://24-hr-jordy.netlify.app |
-| Last deployed | 2026-03-09 (M6 + M7 deployed) |
+| Last deployed | 2026-03-09 (M6 + M7 + M8 deployed) |
 
 ---
 
@@ -25,8 +25,8 @@
 | M5 | Wizard + Bot API | done | `feat/m5-wizard` | Yes | PR #6 merged |
 | M6 | Dashboard + Bot APIs | done | `feat/m6-dashboard` | Yes | PR #7 merged |
 | M7 | Chat Proxy API | done | `feat/m7-chat-api` | Yes | PR #8 merged |
-| M8 | Chat UI | not started | `feat/m8-chat-ui` | No | |
-| M9 | Polish | not started | `feat/m9-polish` | No | |
+| M8 | Chat UI | done | `feat/m8-chat-ui` | Yes | PR #9 merged 2026-03-09 |
+| M9 | Polish | done | `feat/m9-polish` | Yes | PR #10 merged 2026-03-09 |
 
 ---
 
@@ -106,15 +106,15 @@
 - [x] `npm run lint && npm run type-check && npm run test` all exit 0
 
 ### M8 — Chat UI
-- [ ] `/chat/{bot_id}` loads without login and shows bot name
-- [ ] Welcome message: "Hi! Ask me anything about {league}."
-- [ ] User message appears immediately on send
-- [ ] Bot response streams token by token with `▌` cursor
-- [ ] Input and send button are disabled while streaming
-- [ ] Chat history persists for the session (not across sessions)
-- [ ] Invalid `bot_id` shows: "This chatbot doesn't exist or has been removed"
-- [ ] Page is usable on mobile (no horizontal scroll)
-- [ ] `npm run lint && npm run type-check && npm run test` all exit 0
+- [x] `/chat/{bot_id}` loads without login and shows bot name
+- [x] Welcome message: "Hi! Ask me anything about {league}."
+- [x] User message appears immediately on send
+- [x] Bot response streams token by token with `▌` cursor
+- [x] Input and send button are disabled while streaming
+- [x] Chat history persists for the session (not across sessions)
+- [x] Invalid `bot_id` shows: "This chatbot doesn't exist or has been removed"
+- [x] Page is usable on mobile (no horizontal scroll)
+- [x] `npm run lint && npm run type-check && npm run test` all exit 0
 
 ### M9 — Polish
 - [ ] Landing page (`/`) has Sign Up and Log In CTAs
@@ -139,6 +139,8 @@
 | 2026-03-09 | M6 | Dashboard + GET /api/bots/me + GET /api/bots/[bot_id], setup redirect fix, post-review fixes (URL fallback, error escape, loading state, findById), 59 tests | triggered |
 | 2026-03-09 | M7 | POST /api/chat streaming proxy — 50kb limit, 502 on unreachable endpoint, direct stream pipe, 66 tests | triggered |
 | 2026-03-09 | M7 post-review | null body guard (400 not 500), parseInt→Number, botRes.body null check, X-Accel-Buffering header, fetch timeout TODO, 2 new tests, 68 tests total | triggered |
+| 2026-03-09 | M8 | Chat UI — fan-facing chat page, SSE streaming, ChatWindow/MessageBubble/ChatInput/StreamingCursor, post-review fixes (useCallback, stable keys, scroll fix, AbortError guard, React.cache, loading.tsx), 111/112 tests passing | triggered |
+| 2026-03-09 | M9 | Polish — hero landing page with CTAs, setup blank-flash fix, loading.tsx for /setup + /dashboard, PR review fixes (main landmark, focus rings, metadata), 115 tests | triggered |
 
 ---
 
