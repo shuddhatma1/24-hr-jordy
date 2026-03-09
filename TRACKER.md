@@ -10,7 +10,7 @@
 |---|---|
 | GitHub | https://github.com/shuddhatma1/24-hr-jordy.git |
 | Netlify URL | https://24-hr-jordy.netlify.app |
-| Last deployed | 2026-03-09 (M6 + M7 + M8 deployed) |
+| Last deployed | 2026-03-09 (M9 — all modules complete) |
 
 ---
 
@@ -117,13 +117,13 @@
 - [x] `npm run lint && npm run type-check && npm run test` all exit 0
 
 ### M9 — Polish
-- [ ] Landing page (`/`) has Sign Up and Log In CTAs
-- [ ] All error states have clear user-facing messages (no raw error objects shown)
-- [ ] Loading states on all async actions (login, signup, wizard submit)
-- [ ] All pages pass mobile layout check (no horizontal scroll at 375px)
-- [ ] No `console.error` or unhandled promise rejections in browser console during happy path
-- [ ] End-to-end demo flow works: signup → setup → dashboard → copy URL → fan chat → streaming response
-- [ ] `npm run lint && npm run type-check && npm run test` all exit 0
+- [x] Landing page (`/`) has Sign Up and Log In CTAs
+- [x] All error states have clear user-facing messages (no raw error objects shown)
+- [x] Loading states on all async actions (login, signup, wizard submit)
+- [x] All pages pass mobile layout check (no horizontal scroll at 375px)
+- [x] No `console.error` or unhandled promise rejections in browser console during happy path
+- [x] End-to-end demo flow works: signup → setup → dashboard → copy URL → fan chat → streaming response
+- [x] `npm run lint && npm run type-check && npm run test` all exit 0
 
 ---
 
