@@ -10,7 +10,7 @@
 |---|---|
 | GitHub | https://github.com/shuddhatma1/24-hr-jordy.git |
 | Netlify URL | https://24-hr-jordy.netlify.app |
-| Last deployed | 2026-03-09 (M5) |
+| Last deployed | 2026-03-09 (M6 pending deploy) |
 
 ---
 
@@ -23,8 +23,8 @@
 | M3 | Auth | done | `feat/m3-auth` | Yes | PR #3 + #4 merged |
 | M4 | Bot Registry | done | `feat/m4-registry` | Yes | PR #5 merged |
 | M5 | Wizard + Bot API | done | `feat/m5-wizard` | Yes | PR #6 merged |
-| M6 | Dashboard + Bot APIs | not started | `feat/m6-dashboard` | No | |
-| M7 | Chat Proxy API | not started | `feat/m7-chat-api` | No | |
+| M6 | Dashboard + Bot APIs | done | `feat/m6-dashboard` | No | PR #7 open |
+| M7 | Chat Proxy API | done | `feat/m7-chat-api` | No | PR #8 pending |
 | M8 | Chat UI | not started | `feat/m8-chat-ui` | No | |
 | M9 | Polish | not started | `feat/m9-polish` | No | |
 
@@ -83,27 +83,27 @@
 - [x] `npm run lint && npm run type-check && npm run test` all exit 0
 
 ### M6 — Dashboard + Bot APIs
-- [ ] `/dashboard` shows bot name, sport, league, and hosted URL
-- [ ] Copy button copies the URL and shows "Copied!" confirmation
-- [ ] "Preview Chatbot" opens `/chat/{bot_id}` in a new tab
-- [ ] Log out button ends session and redirects to `/login`
-- [ ] `GET /api/bots/me` with valid session returns bot data
-- [ ] `GET /api/bots/me` with no session returns 401
-- [ ] `GET /api/bots/me` when owner has no bot returns 404
-- [ ] `GET /api/bots/[bot_id]` with valid ObjectId returns bot name + league (no sensitive fields)
-- [ ] `GET /api/bots/[bot_id]` with invalid/unknown id returns 404
-- [ ] `npm run lint && npm run type-check && npm run test` all exit 0
+- [x] `/dashboard` shows bot name, sport, league, and hosted URL
+- [x] Copy button copies the URL and shows "Copied!" confirmation
+- [x] "Preview Chatbot" opens `/chat/{bot_id}` in a new tab
+- [x] Log out button ends session and redirects to `/login`
+- [x] `GET /api/bots/me` with valid session returns bot data
+- [x] `GET /api/bots/me` with no session returns 401
+- [x] `GET /api/bots/me` when owner has no bot returns 404
+- [x] `GET /api/bots/[bot_id]` with valid ObjectId returns bot name + league (no sensitive fields)
+- [x] `GET /api/bots/[bot_id]` with invalid/unknown id returns 404
+- [x] `npm run lint && npm run type-check && npm run test` all exit 0
 
 ### M7 — Chat Proxy API
-- [ ] `POST /api/chat` with valid `bot_id` + `messages` proxies to mock bot and streams response
-- [ ] First token arrives within 3 seconds
-- [ ] `Content-Type: text/event-stream` set on response
-- [ ] Stream is piped directly — not buffered
-- [ ] If bot endpoint is unreachable, returns 502 (not 500, not unhandled rejection)
-- [ ] If `bot_id` not found in DB, returns 404
-- [ ] Request body over 50kb is rejected with 413
-- [ ] Bot endpoint URL always comes from DB — never from user input
-- [ ] `npm run lint && npm run type-check && npm run test` all exit 0
+- [x] `POST /api/chat` with valid `bot_id` + `messages` proxies to mock bot and streams response
+- [x] First token arrives within 3 seconds
+- [x] `Content-Type: text/event-stream` set on response
+- [x] Stream is piped directly — not buffered
+- [x] If bot endpoint is unreachable, returns 502 (not 500, not unhandled rejection)
+- [x] If `bot_id` not found in DB, returns 404
+- [x] Request body over 50kb is rejected with 413
+- [x] Bot endpoint URL always comes from DB — never from user input
+- [x] `npm run lint && npm run type-check && npm run test` all exit 0
 
 ### M8 — Chat UI
 - [ ] `/chat/{bot_id}` loads without login and shows bot name
@@ -136,6 +136,8 @@
 | 2026-03-07 | M4 | Bot registry — sport/league → endpoint map, 14 tests | triggered |
 | 2026-03-08 | M5 | Wizard UI + POST /api/bots — 3-step setup, 6 tests | triggered |
 | 2026-03-09 | M5 post-review | connectDB fix, 401 redirect, text visibility, 49 tests | triggered |
+| 2026-03-09 | M6 | Dashboard + GET /api/bots/me + GET /api/bots/[bot_id], setup redirect fix, post-review fixes (URL fallback, error escape, loading state, findById), 59 tests | PR #7 open |
+| 2026-03-09 | M7 | POST /api/chat streaming proxy — 50kb limit, 502 on unreachable endpoint, direct stream pipe, 66 tests | PR #8 pending |
 
 ---
 
