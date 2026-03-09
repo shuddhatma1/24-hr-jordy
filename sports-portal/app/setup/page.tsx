@@ -143,7 +143,7 @@ export default function SetupPage() {
                   id="sport"
                   value={sport}
                   onChange={(e) => handleSportChange(e.target.value as Sport)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   {SUPPORTED_SPORTS.map((s) => (
                     <option key={s} value={s}>
