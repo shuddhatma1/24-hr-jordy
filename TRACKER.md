@@ -10,7 +10,7 @@
 |---|---|
 | GitHub | https://github.com/shuddhatma1/24-hr-jordy.git |
 | Netlify URL | https://24-hr-jordy.netlify.app |
-| Last deployed | 2026-03-06 (M3) |
+| Last deployed | 2026-03-07 (M4) |
 
 ---
 
@@ -21,8 +21,8 @@
 | M1 | Project Setup | done | `feat/m1-setup` | No | |
 | M2 | MongoDB + Models | done | `feat/m2-mongodb` | Yes | PR #2 merged |
 | M3 | Auth | done | `feat/m3-auth` | Yes | PR #3 + #4 merged |
-| M4 | Bot Registry | not started | `feat/m4-registry` | No | |
-| M5 | Wizard + Bot API | not started | `feat/m5-wizard` | No | |
+| M4 | Bot Registry | done | `feat/m4-registry` | Yes | PR #5 merged |
+| M5 | Wizard + Bot API | done | `feat/m5-wizard` | No | |
 | M6 | Dashboard + Bot APIs | not started | `feat/m6-dashboard` | No | |
 | M7 | Chat Proxy API | not started | `feat/m7-chat-api` | No | |
 | M8 | Chat UI | not started | `feat/m8-chat-ui` | No | |
@@ -64,23 +64,23 @@
 - [x] `npm run lint && npm run type-check && npm run test` all exit 0
 
 ### M4 — Bot Registry
-- [ ] `lib/bot-registry.ts` exports a `getEndpointUrl(sport, league)` function
-- [ ] Returns `MOCK_BOT_URL` for all valid entries in dev
-- [ ] Returns `null` (not throws) for an unsupported `sport:league` combo
-- [ ] All 6 supported leagues are present: EPL, La Liga, Bundesliga, NBA, NFL, MLB
-- [ ] Unit tests cover: valid lookup, unsupported league returns null
-- [ ] `npm run type-check` exits 0
+- [x] `lib/bot-registry.ts` exports a `getEndpointUrl(sport, league)` function
+- [x] Returns `MOCK_BOT_URL` for all valid entries in dev
+- [x] Returns `null` (not throws) for an unsupported `sport:league` combo
+- [x] All 6 supported leagues are present: EPL, La Liga, Bundesliga, NBA, NFL, MLB
+- [x] Unit tests cover: valid lookup, unsupported league returns null
+- [x] `npm run type-check` exits 0
 
 ### M5 — Wizard + Bot API
-- [ ] 3-step wizard renders: Step 1 (name), Step 2 (sport), Step 3 (league)
-- [ ] League options update when sport changes
-- [ ] Selecting an unsupported league shows "This league isn't available yet"
-- [ ] `POST /api/bots` with valid session + data creates bot and returns `bot_id`
-- [ ] `POST /api/bots` with no session returns 401
-- [ ] `POST /api/bots` when owner already has a bot returns 409
-- [ ] `POST /api/bots` with missing fields returns 400
-- [ ] After wizard completes, user is redirected to `/dashboard`
-- [ ] `npm run lint && npm run type-check && npm run test` all exit 0
+- [x] 3-step wizard renders: Step 1 (name), Step 2 (sport), Step 3 (league)
+- [x] League options update when sport changes
+- [x] Selecting an unsupported league shows "This league isn't available yet"
+- [x] `POST /api/bots` with valid session + data creates bot and returns `bot_id`
+- [x] `POST /api/bots` with no session returns 401
+- [x] `POST /api/bots` when owner already has a bot returns 409
+- [x] `POST /api/bots` with missing fields returns 400
+- [x] After wizard completes, user is redirected to `/dashboard`
+- [x] `npm run lint && npm run type-check && npm run test` all exit 0
 
 ### M6 — Dashboard + Bot APIs
 - [ ] `/dashboard` shows bot name, sport, league, and hosted URL
@@ -133,6 +133,8 @@
 | 2026-03-06 | M2 | MongoDB connection + User/Bot models | triggered |
 | 2026-03-06 | M3 | Auth — NextAuth v5, signup, route protection | triggered |
 | 2026-03-06 | M3 hotfix | auth.config.ts split (Edge Runtime), trustHost, AUTH_SECRET | triggered |
+| 2026-03-07 | M4 | Bot registry — sport/league → endpoint map, 14 tests | triggered |
+| 2026-03-08 | M5 | Wizard UI + POST /api/bots — 3-step setup, 6 tests | triggered |
 
 ---
 
