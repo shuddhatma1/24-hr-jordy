@@ -50,6 +50,10 @@ export default function SetupPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ bot_name: botName.trim(), sport, league }),
       })
+      if (res.status === 401) {
+        router.push('/login')
+        return
+      }
       if (!res.ok) {
         const data = await res.json()
         setError(data.error ?? 'Something went wrong')
@@ -112,7 +116,7 @@ export default function SetupPage() {
                   onChange={(e) => setBotName(e.target.value)}
                   placeholder="e.g. City FC Bot"
                   maxLength={100}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               {error && <p className="text-sm text-red-600">{error}</p>}
@@ -181,7 +185,8 @@ export default function SetupPage() {
                   id="league"
                   value={league}
                   onChange={(e) => setLeague(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={loading}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {LEAGUES_BY_SPORT[sport].map(({ value, label }) => (
                     <option key={value} value={value}>
