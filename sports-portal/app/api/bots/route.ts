@@ -39,9 +39,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "This league isn't available yet" }, { status: 400 })
   }
 
-  await connectDB()
-
   try {
+    await connectDB()
     const bot = await Bot.create({
       owner_id,
       bot_name: bot_name.trim(),

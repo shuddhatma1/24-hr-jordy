@@ -53,7 +53,7 @@ A self-serve portal where sports league owners sign up, configure an AI stats ch
 | M2 — MongoDB + Models | done | `feat/m2-mongodb` |
 | M3 — Auth | done | `feat/m3-auth` |
 | M4 — Bot Registry | done | `feat/m4-registry` |
-| M5 — Wizard + Bot API | done | `feat/m5-wizard` |
+| M5 — Wizard + Bot API | done | `feat/m5-wizard` | PR #6 open; post-review fixes applied 2026-03-09 |
 | M6 — Dashboard + Bot APIs | Not started | `feat/m6-dashboard` |
 | M7 — Chat Proxy API | Not started | `feat/m7-chat-api` |
 | M8 — Chat UI | Not started | `feat/m8-chat-ui` |
@@ -253,17 +253,34 @@ Sports covered: Soccer (EPL, La Liga, Bundesliga), Basketball (NBA), NFL, Baseba
 **New files in `sports-portal/`:**
 - `app/api/bots/route.ts` — `POST /api/bots`: auth check → validate body → `getEndpointUrl` → `Bot.create` → return `{ bot_id }`
 - `app/setup/page.tsx` — 3-step wizard (`'use client'`): name → sport → league, submits to `/api/bots`, redirects to `/dashboard`
-- `app/api/bots/__tests__/bots.test.ts` — 6 unit tests
+- `app/api/bots/__tests__/bots.test.ts` — 10 unit tests (6 original + 2 from fix commit + 2 from post-PR-review)
 
 **Key design decisions:**
 - Auth check (`await auth()`) comes before body parsing — fail fast before any DB work
-- `connectDB()` called after all validation — DB connection only on valid requests
+- `connectDB()` called inside the same `try/catch` as `Bot.create` — DB connection failure returns a clean error, not an unhandled rejection
 - Sport/league validated against `SUPPORTED_SPORTS`/`LEAGUES_BY_SPORT`, then `getEndpointUrl` as a second gate (defence-in-depth; distinct error messages at each layer)
 - `Bot.create` catches `code 11000` (unique `owner_id`) → 409; all other DB errors rethrow
 - Wizard initializes sport/league to first valid options — select is always in a valid state, no "Pick one" blank option
 - `handleBack` uses `Math.max(1, step - 1)` — concise and safe against step underflow
+- `handleSubmit` redirects to `/login` on 401 (session expired mid-wizard), not inline error
+- League `<select>` is `disabled` during API submission — prevents UI state diverging from submitted values
 
-**Tests:** 45 total (39 existing + 6 new) — all passing. Lint, type-check, test all exit 0.
+**Post-PR-review fixes applied (2026-03-09):**
+1. `connectDB()` moved inside `try/catch` with `Bot.create` — prevents unhandled rejection on DB failure
+2. `res.status === 401` → `router.push('/login')` in `handleSubmit` — session expiry redirects properly
+3. League `<select>` gets `disabled={loading}` during submission
+4. 2 new tests: `MOCK_BOT_URL` unset → 400 "This league isn't available yet"; invalid JSON body → 400 "Invalid JSON"
+
+**Tests:** 49 total (45 after M5 initial + 4 added across fix commit and post-review) — all passing. Lint, type-check, test all exit 0.
+
+**Input text visibility fix (2026-03-09):**
+- Added `text-gray-900` to all form inputs on `/setup`, `/login`, and `/signup`
+- Root cause: Tailwind CSS variable inheritance rendered input text as invisible light grey
+- Files touched: `app/setup/page.tsx`, `app/(auth)/login/page.tsx`, `app/(auth)/signup/page.tsx`
+
+**PR #6 final state:** 7 files changed (471 additions, 26 deletions), deploy preview live and passing at `deploy-preview-6--24-hr-jordy.netlify.app`.
+
+**Known flaky test:** "returns 409 when owner already has a bot" can fail on cold start — Mongoose creates unique indexes asynchronously; index may not exist for the very first duplicate write. Passes consistently on re-run. Pre-existing, not introduced by fixes.
 
 **Known gap deferred to M6:** `/setup` does not redirect to `/dashboard` if owner already has a bot on page load (needs `GET /api/bots/me` which ships in M6). For now, re-submitting the wizard shows the 409 error inline.
 

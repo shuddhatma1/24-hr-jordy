@@ -114,4 +114,26 @@ describe('POST /api/bots', () => {
     const data = await res.json()
     expect(data.error).toContain('100')
   })
+
+  it('returns 400 when MOCK_BOT_URL is unset (league not available)', async () => {
+    // MOCK_BOT_URL is deleted in afterEach; ensure it's absent here
+    mockSession('owner-8')
+    const res = await POST(makeReq({ bot_name: 'Test', sport: 'soccer', league: 'english-premier-league' }))
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toBe("This league isn't available yet")
+  })
+
+  it('returns 400 for invalid JSON body', async () => {
+    mockSession('owner-9')
+    const req = new Request('http://localhost/api/bots', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: 'not-json',
+    })
+    const res = await POST(req)
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toBe('Invalid JSON')
+  })
 })
