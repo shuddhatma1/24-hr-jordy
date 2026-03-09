@@ -1,8 +1,14 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
+
+export const metadata: Metadata = {
+  title: 'Sports Chatbot Portal — Launch an AI Stats Chatbot for Your League',
+  description: 'Configure and deploy an AI sports stats chatbot in under 5 minutes. No engineering required.',
+}
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-16">
+    <main className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-16">
       <div className="w-full max-w-lg mx-auto text-center">
         <h1 className="text-4xl font-bold text-gray-900 mb-4 leading-tight">
           Launch an AI Stats Chatbot for Your League
@@ -26,13 +32,13 @@ export default function Home() {
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
             href="/signup"
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm"
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             Get started free
           </Link>
           <Link
             href="/login"
-            className="px-6 py-3 bg-white text-gray-700 rounded-lg border border-gray-300 hover:bg-gray-50 font-medium text-sm"
+            className="px-6 py-3 bg-white text-gray-700 rounded-lg border border-gray-300 hover:bg-gray-50 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             Log in
           </Link>
@@ -41,6 +47,6 @@ export default function Home() {
           Sports Chatbot Portal — built for league owners and team operators.
         </p>
       </div>
-    </div>
+    </main>
   )
 }
