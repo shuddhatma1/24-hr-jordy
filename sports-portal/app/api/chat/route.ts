@@ -8,7 +8,7 @@ const MAX_BODY_BYTES = 50 * 1024
 export async function POST(req: Request) {
   // Fast-path: reject oversized bodies before buffering
   const contentLength = req.headers.get('content-length')
-  if (contentLength && parseInt(contentLength) > MAX_BODY_BYTES) {
+  if (contentLength && Number(contentLength) > MAX_BODY_BYTES) {
     return NextResponse.json({ error: 'Payload too large' }, { status: 413 })
   }
 
@@ -22,6 +22,10 @@ export async function POST(req: Request) {
     body = JSON.parse(raw)
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
+
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
   const { bot_id, messages } = body as Record<string, unknown>
@@ -45,6 +49,7 @@ export async function POST(req: Request) {
 
     let botRes: globalThis.Response
     try {
+      // TODO: add AbortController timeout before production
       botRes = await fetch(bot.bot_endpoint_url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -58,12 +63,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Bot endpoint error' }, { status: 502 })
     }
 
+    if (!botRes.body) {
+      return NextResponse.json({ error: 'Bot endpoint error' }, { status: 502 })
+    }
+
     return new Response(botRes.body, {
       status: 200,
       headers: {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no',
       },
     })
   } catch {

@@ -27,12 +27,19 @@ afterAll(async () => {
   await mongod.stop()
 })
 
-function makeReq(body: unknown, extraHeaders: Record<string, string> = {}) {
-  const serialized = JSON.stringify(body)
+function makeReq(body: unknown) {
   return new Request('http://localhost/api/chat', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...extraHeaders },
-    body: serialized,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+}
+
+function makeRawReq(raw: string) {
+  return new Request('http://localhost/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: raw,
   })
 }
 
@@ -61,7 +68,7 @@ function mockBotFetch(stream: ReadableStream) {
 }
 
 describe('POST /api/chat', () => {
-  it('returns 200 with text/event-stream when bot is found and endpoint responds', async () => {
+  it('returns 200 with text/event-stream and pipes stream body', async () => {
     const bot = await insertBot()
     const stream = new ReadableStream({
       start(c) {
@@ -75,6 +82,8 @@ describe('POST /api/chat', () => {
     const res = await POST(makeReq({ bot_id: bot._id.toString(), messages: [{ role: 'user', content: 'hi' }] }))
     expect(res.status).toBe(200)
     expect(res.headers.get('content-type')).toBe('text/event-stream')
+    const text = await res.text()
+    expect(text).toContain('{"token":"hello"}')
   })
 
   it('returns 404 when bot_id is a valid ObjectId but not in DB', async () => {
@@ -102,6 +111,16 @@ describe('POST /api/chat', () => {
     expect(data.error).toBe('Bot endpoint unreachable')
   })
 
+  it('returns 502 when bot endpoint returns non-ok status', async () => {
+    const bot = await insertBot()
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 500 })))
+
+    const res = await POST(makeReq({ bot_id: bot._id.toString(), messages: [] }))
+    expect(res.status).toBe(502)
+    const data = await res.json()
+    expect(data.error).toBe('Bot endpoint error')
+  })
+
   it('returns 413 when body exceeds 50kb', async () => {
     const bigMessages = Array.from({ length: 500 }, (_, i) => ({
       role: 'user',
@@ -125,5 +144,12 @@ describe('POST /api/chat', () => {
     expect(res.status).toBe(400)
     const data = await res.json()
     expect(data.error).toBe('messages must be an array')
+  })
+
+  it('returns 400 when body is null JSON', async () => {
+    const res = await POST(makeRawReq('null'))
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toBe('Invalid request body')
   })
 })
