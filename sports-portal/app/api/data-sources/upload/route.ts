@@ -82,6 +82,11 @@ export async function POST(request: Request) {
     )
   }
 
+  // Cap extracted text to prevent oversized DB documents and system_context payloads
+  if (extractedText.length > 50000) {
+    extractedText = extractedText.slice(0, 50000)
+  }
+
   try {
     await connectDB()
 
@@ -90,14 +95,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No bot found' }, { status: 404 })
     }
 
+    // Sanitize filename: strip path separators, truncate to schema maxlength
+    const safeName = file.name.replace(/[\\/]/g, '_').slice(0, 200)
+
     const source = await DataSource.create({
       owner_id: session.user.id,
       bot_id: bot._id.toString(),
       type: 'file',
-      title: file.name,
+      title: safeName,
       content: extractedText,
       file_size: file.size,
-      original_filename: file.name,
+      original_filename: safeName,
     })
 
     return NextResponse.json(

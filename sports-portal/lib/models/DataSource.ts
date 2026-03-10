@@ -12,11 +12,11 @@ export interface IDataSource extends Document {
 }
 
 const DataSourceSchema = new Schema<IDataSource>({
-  owner_id: { type: String, required: true },
+  owner_id: { type: String, required: true, index: true },
   bot_id:   { type: String, required: true, index: true },
   type:     { type: String, required: true, enum: ['faq', 'file'] },
   title:    { type: String, required: true, maxlength: 200 },
-  content:  { type: String, required: true },
+  content:  { type: String, required: true, maxlength: 50000 },
   file_size:         { type: Number },
   original_filename: { type: String },
   created_at: { type: Date, default: () => new Date() },

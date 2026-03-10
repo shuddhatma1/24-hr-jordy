@@ -75,6 +75,12 @@ export async function POST(request: Request) {
   if (!content || typeof content !== 'string' || content.trim().length === 0) {
     return NextResponse.json({ error: 'Content is required' }, { status: 400 })
   }
+  if (content.trim().length > 50000) {
+    return NextResponse.json(
+      { error: 'Content must be 50,000 characters or less' },
+      { status: 400 }
+    )
+  }
 
   try {
     await connectDB()
