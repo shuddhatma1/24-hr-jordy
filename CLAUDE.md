@@ -29,12 +29,15 @@ IMPORTANT: Always run all three before committing. Fix every error — do not su
 
 ## Key Decisions
 - **Bot registry:** `lib/bot-registry.ts` maps `"sport:league"` → streaming endpoint URL. In dev, all point to `MOCK_BOT_URL`.
-- **Chat proxy:** `POST /api/chat` fetches `bot_endpoint_url` from DB, fetches owner's DataSources, forwards `{ messages, system_context }`, pipes stream back.
+- **Chat proxy:** `POST /api/chat` fetches bot from DB, fetches DataSources, calls Gemini with `system_context`, streams SSE back. Also logs `ChatEvent` fire-and-forget (never blocks chat).
 - **1 bot per owner** — `POST /api/bots` returns 409 if one already exists.
 - **`bot_id` = MongoDB ObjectId** — not guessable; chat page is intentionally public (no auth).
 - **Embed widget:** `public/widget.js` — vanilla JS, reads `data-bot-id`, injects floating iframe to `/chat/[id]?embed=true`.
 - **File storage:** parse on upload, store extracted text in DataSource.content — no binary storage, no S3.
 - **Dashboard routing:** nested Next.js routes under `/dashboard/*`; `DashboardShell` (`'use client'`) handles sidebar + mobile; `dashboard/layout.tsx` (server) handles auth.
+
+## UI/UX Overhaul
+Plan is in `UI-OVERHAUL.md` — load on-demand when working on UI tasks. Do not inline here.
 
 ## When Compacting
 Always preserve: current module name and status, list of files modified this session, last test/lint command output, and any unresolved errors.

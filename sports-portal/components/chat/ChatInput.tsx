@@ -1,31 +1,51 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 
 interface Props {
   onSend: (text: string) => void
   disabled: boolean
 }
 
+const MAX_LENGTH = 1000
+const SHOW_COUNT_THRESHOLD = 900
+
 export default function ChatInput({ onSend, disabled }: Props) {
   const [value, setValue] = useState('')
-  const inputRef = useRef<HTMLInputElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   // Re-focus input when streaming completes so users can type the next question
   useEffect(() => {
     if (!disabled) {
-      inputRef.current?.focus()
+      textareaRef.current?.focus()
     }
   }, [disabled])
+
+  // Auto-grow textarea height based on content
+  const adjustHeight = useCallback(() => {
+    const textarea = textareaRef.current
+    if (!textarea) return
+    textarea.style.height = 'auto'
+    // Cap at ~5 lines (120px)
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`
+  }, [])
+
+  useEffect(() => {
+    adjustHeight()
+  }, [value, adjustHeight])
 
   function handleSubmit() {
     const trimmed = value.trim()
     if (!trimmed || disabled) return
     onSend(trimmed)
     setValue('')
+    // Reset height after clearing
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+    }
   }
 
-  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       handleSubmit()
@@ -33,29 +53,53 @@ export default function ChatInput({ onSend, disabled }: Props) {
   }
 
   return (
-    <div className="bg-white border-t border-gray-200 px-4 py-3 flex-shrink-0">
-      <div className="flex gap-2">
-        <input
-          ref={inputRef}
-          type="text"
+    <div
+      className="bg-white border-t border-gray-200 px-3 py-2 flex-shrink-0"
+      style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
+    >
+      <div className="flex items-end gap-2">
+        <textarea
+          ref={textareaRef}
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
           aria-label="Ask a question"
           placeholder="Type a question..."
           disabled={disabled}
-          maxLength={1000}
-          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-gray-400"
+          maxLength={MAX_LENGTH}
+          rows={1}
+          className="flex-1 px-3 py-2.5 border border-gray-300 rounded-2xl text-base text-gray-900 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-gray-400 leading-relaxed"
         />
         <button
           type="button"
           onClick={handleSubmit}
           disabled={disabled || !value.trim()}
-          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+          aria-label="Send"
+          className="flex-shrink-0 w-11 h-11 flex items-center justify-center bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          Send
+          {/* Arrow-up icon */}
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 20 20"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M10 3.5L10 16.5M10 3.5L4.5 9M10 3.5L15.5 9"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </button>
       </div>
+      {value.length >= SHOW_COUNT_THRESHOLD && (
+        <div className="text-xs text-gray-400 text-right mt-1 pr-12" aria-live="polite">
+          {value.length}/{MAX_LENGTH}
+        </div>
+      )}
     </div>
   )
 }

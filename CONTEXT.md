@@ -20,7 +20,7 @@ Concretely:
 - **Fan UX** (chat page, streaming response) — owned here: `app/chat/[bot_id]/page.tsx` + `ChatWindow.tsx`
 - **AI bot** — owned here: `app/api/chat/route.ts` calls Gemini 2.0 Flash with Google Search grounding directly
 - **Portal's job on knowledge**: collect owner inputs cleanly (FAQ text, uploaded files), store them, inject as `system_context` into Gemini system instruction
-- **Analytics**: sidebar item is present as "Coming Soon" — signals roadmap investment to owners. Full analytics dashboard is a future module.
+- **Analytics**: `/dashboard/analytics` — stat cards (conversations, messages, avg), daily bar chart, period toggle (7d/30d/all). `ChatEvent` model logs events fire-and-forget from `/api/chat`.
 
 **Dashboard principle:** every page should guide the owner to their next action. The dashboard is not just a data display — it is a configuration journey. Show progress, surface what's missing, celebrate what's done.
 
@@ -67,7 +67,7 @@ A self-serve portal where sports league owners sign up, configure an AI stats ch
 | MongoDB DB name | `sports-portal` |
 | MongoDB URI format | `mongodb+srv://shuddhatma:<pass>@cluster0.fuhufq5.mongodb.net/sports-portal?appName=Cluster0` |
 | Netlify | Connected — auto-deploys from `main` (production branch) |
-| Netlify URL | `https://24-hr-jordy.netlify.app` |
+| Netlify URL | `https://jordy-self-serviceable.netlify.app` |
 | MongoDB Atlas IP Access List | `0.0.0.0/0` — required for Netlify functions (dynamic AWS IPs) |
 
 > Note: MongoDB password is stored only in `.env.local` (never committed).
@@ -91,9 +91,10 @@ A self-serve portal where sports league owners sign up, configure an AI stats ch
 | M11 — Customize | done | `feat/m11-customize` | #12 |
 | M12 — Knowledge Base | done | `feat/m12-knowledge` | #13 merged |
 | M13 — Settings + Embed Widget | done | `feat/m13-settings-embed` | #14 merged 2026-03-10 |
-| M14 — Landing Page | not started | `feat/m14-landing` | — |
+| M14 — Landing Page | done | `feat/m14-landing` | #15 merged 2026-03-11 |
+| M15 — Analytics Dashboard | done | `feat/m15-analytics` | #16 merged 2026-03-11 |
 
-**M1–M13 complete. M14 (Landing Page) is next.**
+**M1–M15 complete.**
 
 ---
 
@@ -136,6 +137,10 @@ sports-portal/
 │   │   ├── customize/
 │   │   │   ├── page.tsx            # [M11 NEW] Customize panel — name, welcome msg, persona, color
 │   │   │   └── __tests__/customize-page.test.tsx  # [M11 NEW] 8 tests — load, 404, 500, save/error, persona
+│   │   ├── analytics/
+│   │   │   ├── page.tsx            # [M15 NEW] Analytics panel — stat cards + bar chart + period toggle
+│   │   │   ├── loading.tsx         # [M15 NEW] Per-route loading state
+│   │   │   └── __tests__/analytics-page.test.tsx  # [M15 NEW] 8 tests
 │   │   ├── data-sources/
 │   │   │   └── page.tsx            # [M12 NEW] Knowledge panel — FAQ + file upload
 │   │   └── settings/
@@ -149,7 +154,8 @@ sports-portal/
 │       ├── bots/route.ts           # POST /api/bots (unchanged)
 │       ├── bots/me/route.ts        # [M11] +PUT, +DELETE; extend GET response
 │       ├── bots/[bot_id]/route.ts  # [M11] Return welcome_message + primary_color
-│       ├── chat/route.ts           # [M12] Fetch + inject DataSources as system_context
+│       ├── analytics/route.ts      # [M15 NEW] GET — owner analytics (totals + daily breakdown)
+│       ├── chat/route.ts           # [M15] +fire-and-forget ChatEvent logging; [M12] DataSource injection
 │       └── data-sources/
 │           ├── route.ts            # [M12 NEW] GET + POST (FAQ entries)
 │           ├── upload/route.ts     # [M12 NEW] POST multipart — parse PDF/CSV/TXT
@@ -161,6 +167,7 @@ sports-portal/
 │   └── models/
 │       ├── User.ts
 │       ├── Bot.ts                  # [M11] +welcome_message, +persona, +primary_color (optional)
+│       ├── ChatEvent.ts            # [M15 NEW] Analytics event model — TTL 90d, no content stored
 │       └── DataSource.ts           # [M12 NEW] Knowledge entries model
 ├── components/
 │   ├── providers.tsx
@@ -195,9 +202,10 @@ Legend: `[Mx]` = modified in module x · `[Mx NEW]` = new file in module x
 | POST | `/api/bots` | Session | Create bot config |
 | GET | `/api/bots/me` | Session | Owner's bot — includes welcome_message, persona, primary_color, created_at |
 | PUT | `/api/bots/me` | Session | Update bot settings (name, welcome msg, persona, color, sport/league) |
-| DELETE | `/api/bots/me` | Session | Delete bot + cascade DataSources |
+| DELETE | `/api/bots/me` | Session | Delete bot + cascade DataSources + ChatEvents |
 | GET | `/api/bots/[bot_id]` | None | Bot info — includes welcome_message + primary_color (fan chat page) |
-| POST | `/api/chat` | None | Call Gemini 2.0 Flash directly; inject DataSource `system_context` + persona into system instruction; stream SSE response |
+| POST | `/api/chat` | None | Call Gemini 2.0 Flash directly; inject DataSource `system_context` + persona into system instruction; stream SSE response; log ChatEvent (fire-and-forget) |
+| GET | `/api/analytics` | Session | Owner analytics — totals + daily breakdown; `?period=7d\|30d\|all` |
 | GET | `/api/data-sources` | Session | List owner's knowledge entries; `?type=faq\|file` filter |
 | POST | `/api/data-sources` | Session | Create FAQ text entry |
 | POST | `/api/data-sources/upload` | Session | Upload + parse PDF/CSV/TXT — stores extracted text |
@@ -228,6 +236,7 @@ Legend: `[Mx]` = modified in module x · `[Mx NEW]` = new file in module x
 | `/dashboard` | Required | Overview — bot info, shareable link, embed widget code |
 | `/dashboard/customize` | Required | Edit name, welcome message, persona, brand color |
 | `/dashboard/data-sources` | Required | Knowledge base — FAQ entries + file uploads |
+| `/dashboard/analytics` | Required | Analytics — conversations, messages, avg msgs/conv, daily chart, period toggle |
 | `/dashboard/settings` | Required | Change league, delete bot |
 | `/chat/[bot_id]` | None | Fan-facing chat UI — full page or embed mode (`?embed=true`) |
 
@@ -263,6 +272,19 @@ Legend: `[Mx]` = modified in module x · `[Mx NEW]` = new file in module x
   created_at: Date           // default: () => new Date()
 }
 // Indexes: { owner_id: 1 }, { bot_id: 1 }
+```
+
+**`chat_events` collection** (`lib/models/ChatEvent.ts`) — NEW:
+```ts
+{
+  bot_id: String,            // required; indexed with created_at
+  owner_id: String,          // required; indexed with created_at
+  event_type: String,        // required — 'conversation_start' | 'message'
+  conversation_id?: String,  // optional — client-generated UUID per chat session
+  created_at: Date           // default: () => new Date(); TTL: 90 days auto-expiry
+}
+// Indexes: { bot_id: 1, created_at: -1 }, { owner_id: 1, created_at: -1 }
+// No message content stored — privacy-friendly event counts only
 ```
 
 **`users` collection** (`lib/models/User.ts`) — unchanged:
@@ -312,6 +334,10 @@ In production: replace `MOCK_BOT_URL` with per-league env vars (e.g. `EPL_BOT_UR
 | Message validation | Messages must alternate `user`/`assistant`; strip system-role; last must be `user` | Gemini requires strict alternation; sanitized before `startChat()` |
 | Bot creation | Modal in dashboard, not a separate page | Better UX; owners stay in context; `/setup` becomes a redirect |
 | Sidebar navigation | `DashboardShell` (`'use client'`) + `dashboard/layout.tsx` (server) | Server layout calls `auth()`; client shell handles `usePathname` + mobile state |
+| Analytics event model (M15) | `ChatEvent` — `event_type`, `conversation_id`, no content; 90-day TTL | Privacy-friendly; free-tier storage safety; fire-and-forget from `/api/chat` |
+| Message counting (M15) | `total_messages` excludes `conversation_start` events | Accurate "Messages" stat — only counts actual user messages, not session starts |
+| Conversation tracking (M15) | Client-generated `conversation_id` UUID per chat session | Reliable session identification independent of message history length |
+| Analytics bar chart (M15) | Capped to last 14 entries; `reduce` for max calculation | Readable at all period lengths; avoids call-stack overflow on large arrays |
 
 ## Key Files to Reference
 

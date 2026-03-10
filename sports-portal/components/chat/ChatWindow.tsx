@@ -66,6 +66,21 @@ export default function ChatWindow({
     }
   }, [])
 
+  // Mobile keyboard handling: scroll chat into view when virtual keyboard opens/closes
+  useEffect(() => {
+    const viewport = typeof window !== 'undefined' ? window.visualViewport : null
+    if (!viewport) return
+
+    function handleResize() {
+      // When keyboard opens, the visualViewport height shrinks.
+      // Scroll the last message into view so input stays visible.
+      bottomRef.current?.scrollIntoView({ behavior: 'instant' })
+    }
+
+    viewport.addEventListener('resize', handleResize)
+    return () => viewport.removeEventListener('resize', handleResize)
+  }, [])
+
   // Scroll to bottom on every update, but only animate smoothly when a new
   // message is added. Per-token updates use 'instant' to avoid jank from
   // dozens of competing smooth-scroll animations during a streaming response.
@@ -209,18 +224,29 @@ export default function ChatWindow({
   )
 
   return (
-    <div className={`flex flex-col ${isEmbed ? 'h-full' : 'h-screen'} bg-gray-50`}>
+    <div
+      className={`flex flex-col ${isEmbed ? 'h-full' : 'h-dvh'} bg-gray-50`}
+      style={{
+        /* Fallback for browsers without dvh support — h-dvh overrides when supported */
+        height: isEmbed ? undefined : '100vh',
+        /* Prevent iOS bounce-scroll on the outer container */
+        overscrollBehavior: 'none',
+      }}
+    >
       {/* Header — applies owner's brand color when set, falls back to white */}
       <header
-        className={`border-b px-4 py-3 flex-shrink-0 ${primaryColor ? '' : 'bg-white border-gray-200'}`}
-        style={
-          primaryColor
+        className={`border-b px-4 py-2 md:py-3 flex-shrink-0 ${primaryColor ? '' : 'bg-white border-gray-200'}`}
+        style={{
+          ...(primaryColor
             ? { backgroundColor: primaryColor, borderColor: 'rgba(0,0,0,0.1)' }
-            : undefined
-        }
+            : {}),
+          paddingTop: isEmbed ? undefined : 'max(0.75rem, env(safe-area-inset-top))',
+          paddingLeft: 'max(1rem, env(safe-area-inset-left))',
+          paddingRight: 'max(1rem, env(safe-area-inset-right))',
+        }}
       >
         <h1
-          className={`text-base font-semibold ${primaryColor && !isLightColor(primaryColor) ? 'text-white' : 'text-gray-900'}`}
+          className={`text-base font-semibold truncate ${primaryColor && !isLightColor(primaryColor) ? 'text-white' : 'text-gray-900'}`}
         >
           {botName}
         </h1>
@@ -231,7 +257,11 @@ export default function ChatWindow({
         role="log"
         aria-label="Chat messages"
         aria-live="polite"
-        className="flex-1 overflow-y-auto px-4 py-4 space-y-3"
+        className="flex-1 overflow-y-auto overflow-x-hidden px-3 md:px-4 py-4 space-y-2 md:space-y-3"
+        style={{
+          /* Prevent pull-to-refresh in chat view */
+          overscrollBehavior: 'contain',
+        }}
       >
         {messages.map((msg) => (
           <MessageBubble

@@ -113,4 +113,42 @@ describe('ChatInput', () => {
     })
     expect(screen.getByRole('button', { name: 'Send' })).not.toBeDisabled()
   })
+
+  it('renders a textarea (not a text input)', () => {
+    render(<ChatInput onSend={vi.fn()} disabled={false} />)
+    const el = screen.getByPlaceholderText('Type a question...')
+    expect(el.tagName).toBe('TEXTAREA')
+  })
+
+  it('does not show character count below threshold', () => {
+    render(<ChatInput onSend={vi.fn()} disabled={false} />)
+    fireEvent.change(screen.getByPlaceholderText('Type a question...'), {
+      target: { value: 'short message' },
+    })
+    expect(screen.queryByText(/\/1000/)).not.toBeInTheDocument()
+  })
+
+  it('shows character count at 900+ characters', () => {
+    render(<ChatInput onSend={vi.fn()} disabled={false} />)
+    const longText = 'a'.repeat(950)
+    fireEvent.change(screen.getByPlaceholderText('Type a question...'), {
+      target: { value: longText },
+    })
+    expect(screen.getByText('950/1000')).toBeInTheDocument()
+  })
+
+  it('send button has accessible aria-label', () => {
+    render(<ChatInput onSend={vi.fn()} disabled={false} />)
+    const btn = screen.getByRole('button', { name: 'Send' })
+    expect(btn).toHaveAttribute('aria-label', 'Send')
+  })
+
+  it('allows Shift+Enter without sending (multiline support)', () => {
+    const onSend = vi.fn()
+    render(<ChatInput onSend={onSend} disabled={false} />)
+    const textarea = screen.getByPlaceholderText('Type a question...')
+    fireEvent.change(textarea, { target: { value: 'line one' } })
+    fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: true })
+    expect(onSend).not.toHaveBeenCalled()
+  })
 })

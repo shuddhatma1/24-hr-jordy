@@ -3,15 +3,42 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fafaf9;
+  --foreground: #1c1917;
+
+  /* Brand palette as CSS custom properties (future dark mode support) */
+  --brand-50: #f0f0ff;
+  --brand-100: #e0e1ff;
+  --brand-200: #c7c8fe;
+  --brand-300: #a4a5fc;
+  --brand-400: #8183f8;
+  --brand-500: #6366f1;
+  --brand-600: #4f46e5;
+  --brand-700: #4338ca;
+  --brand-800: #3730a3;
+  --brand-900: #312e81;
+
+  --accent-400: #c084fc;
+  --accent-500: #a855f7;
+  --accent-600: #9333ea;
+  --accent-700: #7c3aed;
+
+  --scrollbar-thumb: #d6d3d1;
+  --scrollbar-thumb-hover: #a8a29e;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0c0a09;
+    --foreground: #fafaf9;
+    --scrollbar-thumb: #44403c;
+    --scrollbar-thumb-hover: #57534e;
   }
+}
+
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
 }
 
 body {
@@ -20,8 +47,68 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Custom selection color */
+::selection {
+  background-color: var(--brand-200);
+  color: var(--brand-900);
+}
+
+/* Subtle custom scrollbar — scoped to html to avoid affecting selects/textareas */
+html::-webkit-scrollbar,
+html *::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+html::-webkit-scrollbar-track,
+html *::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html::-webkit-scrollbar-thumb,
+html *::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb, #d6d3d1);
+  border-radius: 9999px;
+}
+
+html::-webkit-scrollbar-thumb:hover,
+html *::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover, #a8a29e);
+}
+
+/* Firefox scrollbar */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb, #d6d3d1) transparent;
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Gradient text utility */
+  .gradient-text {
+    @apply bg-gradient-to-r from-brand-500 to-accent-600 bg-clip-text text-transparent;
+  }
+
+  /* Primary gradient background */
+  .gradient-primary {
+    @apply bg-gradient-to-r from-brand-500 to-accent-600;
+  }
+
+  /* Hero section gradient */
+  .gradient-hero {
+    @apply bg-gradient-to-br from-brand-50 via-white to-accent-50;
+  }
+
+  /* Glassmorphism utility */
+  .glass {
+    @apply backdrop-blur-xl bg-white/70 border border-white/20;
+  }
+
+  /* Shimmer skeleton loader */
+  .skeleton {
+    @apply bg-gradient-to-r from-neutral-200 via-neutral-100 to-neutral-200 bg-[length:200%_100%] animate-shimmer rounded;
   }
 }
