@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { SUPPORTED_SPORTS, SPORT_LABELS, LEAGUES_BY_SPORT, type Sport } from '@/lib/bot-registry'
 
 export interface BotData {
@@ -28,6 +28,7 @@ export default function CreateBotModal({ isOpen, onClose, onSuccess }: CreateBot
   const [league, setLeague] = useState(LEAGUES_BY_SPORT[SUPPORTED_SPORTS[0]][0].value)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const dialogRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (isOpen) {
@@ -39,6 +40,58 @@ export default function CreateBotModal({ isOpen, onClose, onSuccess }: CreateBot
       setLoading(false)
     }
   }, [isOpen])
+
+  // Escape to close + focus trap
+  useEffect(() => {
+    if (!isOpen) return
+
+    const dialog = dialogRef.current
+    if (!dialog) return
+
+    // Focus first focusable element when the modal opens or step changes
+    const focusable = Array.from(
+      dialog.querySelectorAll<HTMLElement>(
+        'button, input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      )
+    ).filter((el) => !el.hasAttribute('disabled'))
+
+    focusable[0]?.focus()
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        onClose()
+        return
+      }
+      if (e.key !== 'Tab') return
+
+      // Re-query on each keydown so the list stays current after re-renders
+      const focusableNow = Array.from(
+        dialog!.querySelectorAll<HTMLElement>(
+          'button, input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((el) => !el.hasAttribute('disabled'))
+
+      if (focusableNow.length === 0) { e.preventDefault(); return }
+
+      const first = focusableNow[0]
+      const last = focusableNow[focusableNow.length - 1]
+
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault()
+          last.focus()
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault()
+          first.focus()
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, onClose, step])
 
   if (!isOpen) return null
 
@@ -82,6 +135,11 @@ export default function CreateBotModal({ isOpen, onClose, onSuccess }: CreateBot
         return
       }
       const botRes = await fetch('/api/bots/me')
+      if (!botRes.ok) {
+        const errData = await botRes.json() as { error?: string }
+        setError(errData.error ?? 'Failed to load bot data. Please refresh.')
+        return
+      }
       const botData = await botRes.json() as BotData
       onSuccess(botData)
     } catch {
@@ -109,6 +167,7 @@ export default function CreateBotModal({ isOpen, onClose, onSuccess }: CreateBot
 
       {/* Modal card */}
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"

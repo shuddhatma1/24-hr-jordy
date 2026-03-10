@@ -4,5 +4,8 @@ import { authConfig } from '@/auth.config'
 export const { auth: middleware } = NextAuth(authConfig)
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  // Only run middleware on routes that actually need auth protection.
+  // Scoping this prevents unnecessary JWT overhead on every public request
+  // (landing page, chat page, API routes, static assets).
+  matcher: ['/dashboard/:path*', '/setup/:path*'],
 }

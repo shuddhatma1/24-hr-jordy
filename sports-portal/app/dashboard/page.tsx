@@ -5,13 +5,14 @@ import { useRouter } from 'next/navigation'
 import { SPORT_LABELS, LEAGUES_BY_SPORT, type Sport } from '@/lib/bot-registry'
 import CreateBotModal, { type BotData } from '@/components/dashboard/CreateBotModal'
 
-function getChatUrl(botId: string): string {
-  return `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/chat/${botId}`
+function getChatUrl(botId: string): string | null {
+  const base = process.env.NEXT_PUBLIC_APP_URL ?? ''
+  return base ? `${base}/chat/${botId}` : null
 }
 
-function getEmbedCode(botId: string): string {
+function getEmbedCode(botId: string): string | null {
   const base = process.env.NEXT_PUBLIC_APP_URL ?? ''
-  return `<script src="${base}/widget.js" data-bot-id="${botId}"></script>`
+  return base ? `<script src="${base}/widget.js" data-bot-id="${botId}"></script>` : null
 }
 
 function getLeagueLabel(sport: string, league: string): string {
@@ -73,8 +74,10 @@ export default function DashboardPage() {
 
   async function handleCopyLink() {
     if (!bot) return
+    const url = getChatUrl(bot.bot_id)
+    if (!url) return
     try {
-      await navigator.clipboard.writeText(getChatUrl(bot.bot_id))
+      await navigator.clipboard.writeText(url)
       if (linkTimer.current) clearTimeout(linkTimer.current)
       setCopiedLink(true)
       linkTimer.current = setTimeout(() => setCopiedLink(false), 2000)
@@ -85,8 +88,10 @@ export default function DashboardPage() {
 
   async function handleCopyEmbed() {
     if (!bot) return
+    const code = getEmbedCode(bot.bot_id)
+    if (!code) return
     try {
-      await navigator.clipboard.writeText(getEmbedCode(bot.bot_id))
+      await navigator.clipboard.writeText(code)
       if (embedTimer.current) clearTimeout(embedTimer.current)
       setCopiedEmbed(true)
       embedTimer.current = setTimeout(() => setCopiedEmbed(false), 2000)
@@ -168,22 +173,30 @@ export default function DashboardPage() {
             <div className="bg-white border border-gray-200 rounded-xl p-5">
               <h2 className="text-sm font-medium text-gray-500 mb-1">Shareable link</h2>
               <p className="text-xs text-gray-400 mb-3">Share with fans to give them direct access.</p>
-              <div className="flex gap-2">
-                <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 font-mono truncate">
-                  {getChatUrl(bot.bot_id)}
-                </div>
-                <button onClick={() => void handleCopyLink()} className={copyBtnClass}>
-                  {copiedLink ? 'Copied!' : 'Copy'}
-                </button>
-              </div>
-              <a
-                href={getChatUrl(bot.bot_id)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-2 inline-block text-sm text-blue-600 hover:underline"
-              >
-                Preview chatbot ↗
-              </a>
+              {getChatUrl(bot.bot_id) ? (
+                <>
+                  <div className="flex gap-2">
+                    <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 font-mono truncate">
+                      {getChatUrl(bot.bot_id)}
+                    </div>
+                    <button onClick={() => void handleCopyLink()} className={copyBtnClass}>
+                      {copiedLink ? 'Copied!' : 'Copy'}
+                    </button>
+                  </div>
+                  <a
+                    href={getChatUrl(bot.bot_id)!}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 inline-block text-sm text-blue-600 hover:underline"
+                  >
+                    Preview chatbot ↗
+                  </a>
+                </>
+              ) : (
+                <p className="text-sm text-amber-600">
+                  App URL not configured. Set <code className="font-mono">NEXT_PUBLIC_APP_URL</code> to generate a shareable link.
+                </p>
+              )}
             </div>
 
             {/* Embed widget card */}
@@ -193,14 +206,20 @@ export default function DashboardPage() {
                 Paste this script tag before{' '}
                 <code className="font-mono">&lt;/body&gt;</code> on your site.
               </p>
-              <div className="flex gap-2 items-start">
-                <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 font-mono break-all">
-                  {getEmbedCode(bot.bot_id)}
+              {getEmbedCode(bot.bot_id) ? (
+                <div className="flex gap-2 items-start">
+                  <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 font-mono break-all">
+                    {getEmbedCode(bot.bot_id)}
+                  </div>
+                  <button onClick={() => void handleCopyEmbed()} className={copyBtnClass}>
+                    {copiedEmbed ? 'Copied!' : 'Copy'}
+                  </button>
                 </div>
-                <button onClick={() => void handleCopyEmbed()} className={copyBtnClass}>
-                  {copiedEmbed ? 'Copied!' : 'Copy'}
-                </button>
-              </div>
+              ) : (
+                <p className="text-sm text-amber-600">
+                  App URL not configured. Set <code className="font-mono">NEXT_PUBLIC_APP_URL</code> to generate embed code.
+                </p>
+              )}
             </div>
           </div>
         )}

@@ -45,8 +45,7 @@ export default function SignupPage() {
       setError('Account created but login failed. Please log in.')
       router.push('/login')
     } else {
-      // TODO(m6): redirect to /dashboard instead if user already has a bot configured
-      router.push('/setup')
+      router.push('/dashboard')
     }
   }
 
