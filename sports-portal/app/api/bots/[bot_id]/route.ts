@@ -23,6 +23,8 @@ export async function GET(
       bot_name: bot.bot_name,
       sport: bot.sport,
       league: bot.league,
+      welcome_message: bot.welcome_message ?? null,
+      primary_color: bot.primary_color ?? null,
     })
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

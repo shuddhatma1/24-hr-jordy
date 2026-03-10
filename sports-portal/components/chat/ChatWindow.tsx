@@ -14,14 +14,23 @@ interface Props {
   botId: string
   botName: string
   leagueLabel: string
+  welcomeMessage?: string
+  primaryColor?: string
+  isEmbed?: boolean
 }
 
-export default function ChatWindow({ botId, botName, leagueLabel }: Props) {
+export default function ChatWindow({
+  botId,
+  botName,
+  leagueLabel,
+  welcomeMessage,
+  primaryColor,
+}: Props) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: crypto.randomUUID(),
       role: 'bot',
-      content: `Hi! Ask me anything about the ${leagueLabel}.`,
+      content: welcomeMessage || `Hi! Ask me anything about the ${leagueLabel}.`,
     },
   ])
   const [isStreaming, setIsStreaming] = useState(false)
@@ -182,9 +191,20 @@ export default function ChatWindow({ botId, botName, leagueLabel }: Props) {
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-4 py-3 flex-shrink-0">
-        <h1 className="text-base font-semibold text-gray-900">{botName}</h1>
+      {/* Header — applies owner's brand color when set, falls back to white */}
+      <header
+        className={`border-b px-4 py-3 flex-shrink-0 ${primaryColor ? '' : 'bg-white border-gray-200'}`}
+        style={
+          primaryColor
+            ? { backgroundColor: primaryColor, borderColor: 'rgba(0,0,0,0.1)' }
+            : undefined
+        }
+      >
+        <h1
+          className={`text-base font-semibold ${primaryColor ? 'text-white' : 'text-gray-900'}`}
+        >
+          {botName}
+        </h1>
       </header>
 
       {/* Message list */}
