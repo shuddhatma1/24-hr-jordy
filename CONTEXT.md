@@ -5,9 +5,30 @@
 
 ---
 
+## Product Scope & Philosophy — Read This First
+
+**The portal has one job: help a league owner go from "I signed up" to "I have a fully configured chatbot" as fast as possible.**
+
+The owner's journey has four stages:
+```
+Sign up → Create bot → Configure it → Share it
+```
+
+**This portal owns stages 1–4 from the owner's perspective only.** The fan experience and the AI bot are handled by a separate bot team — do not design or engineer for those concerns here.
+
+Concretely:
+- **Fan UX** (chat page behaviour, response quality, session persistence) — bot team's domain
+- **How the bot consumes knowledge** (system_context format, AI processing) — bot team's domain
+- **Portal's job on knowledge**: collect owner inputs cleanly (FAQ text, uploaded files), store them, and make them available. How the bot uses them is not our concern.
+- **Analytics**: sidebar item is present as "Coming Soon" — signals roadmap investment to owners. Full analytics dashboard is a future module.
+
+**Dashboard principle:** every page should guide the owner to their next action. The dashboard is not just a data display — it is a configuration journey. Show progress, surface what's missing, celebrate what's done.
+
+---
+
 ## What We're Building
 
-A self-serve portal where sports league owners sign up, configure an AI stats chatbot (pick sport + league) in a 3-step wizard, and get a hosted URL to share with fans. The AI bot is **pre-built and external** — the portal is purely a configuration, routing, and UI layer. It proxies fan chat messages to the correct pre-built bot streaming endpoint and renders the response.
+A self-serve portal where sports league owners sign up, configure an AI stats chatbot, customize it, add their own knowledge (FAQ text + uploaded files), and deploy it via a shareable link or an embeddable widget. The AI bot is **pre-built and external** — the portal handles configuration, knowledge management, routing, and UI. It stores owner-provided knowledge and makes it available for the bot team to consume.
 
 ---
 
@@ -19,6 +40,7 @@ A self-serve portal where sports league owners sign up, configure an AI stats ch
 | Database | MongoDB Atlas (free tier) | No SQL, no migrations, fast prototype |
 | Auth | NextAuth.js v5 + credentials | Email/password, simplest for prototype |
 | Deployment | Netlify + `@netlify/plugin-nextjs` | User preference; plugin handles SSR/streaming |
+| **Netlify production branch** | **`main`** | **Pushes to other branches trigger cancelled previews, not production deploys** |
 | Auth config split | `auth.config.ts` (edge) + `auth.ts` (server) | Mongoose uses `eval` — banned in Edge Runtime. Middleware must never import `auth.ts` |
 | Streaming | Native `fetch` + `ReadableStream` | Proxy bot stream directly, no extra library |
 | Styling | Tailwind CSS | Fast utility-first styling |
@@ -26,6 +48,11 @@ A self-serve portal where sports league owners sign up, configure an AI stats ch
 | Bot integration | Pre-built bot per league, portal proxies | Bot team builds agents independently |
 | Dev bot | Express mock server on `:3001` | Develop portal without real bot |
 | Stats source | NOT the portal's concern | Bot handles this internally |
+| Dashboard routing (M10+) | Next.js nested routes `/dashboard/*` | Bookmarkable, middleware-protected, `usePathname()` drives sidebar |
+| Embed widget (M13) | `public/widget.js` iframe to `/chat/[id]?embed=true` | Reuses chat page; no duplication; no external deps |
+| Knowledge injection (M12) | `/api/chat` prepends DataSources as `system_context` | Mock bot ignores it; real bot uses it; no AI in portal |
+| File storage (M12) | Parse on upload, store text in MongoDB only | No S3/Blob needed; binary discarded after extraction |
+| Bot creation UX (M10) | Modal in dashboard, not separate `/setup` page | Owners stay in context; `/setup` becomes a redirect |
 
 ---
 
@@ -38,7 +65,7 @@ A self-serve portal where sports league owners sign up, configure an AI stats ch
 | MongoDB user | `shuddhatma` |
 | MongoDB DB name | `sports-portal` |
 | MongoDB URI format | `mongodb+srv://shuddhatma:<pass>@cluster0.fuhufq5.mongodb.net/sports-portal?appName=Cluster0` |
-| Netlify | Connected — auto-deploys from `feat/m8-chat-ui` (production branch) |
+| Netlify | Connected — auto-deploys from `main` (production branch) |
 | Netlify URL | `https://24-hr-jordy.netlify.app` |
 | MongoDB Atlas IP Access List | `0.0.0.0/0` — required for Netlify functions (dynamic AWS IPs) |
 
@@ -59,8 +86,13 @@ A self-serve portal where sports league owners sign up, configure an AI stats ch
 | M7 — Chat Proxy API | done | `feat/m7-chat-api` | #8 |
 | M8 — Chat UI | done | `feat/m8-chat-ui` | #9 merged 2026-03-09 |
 | M9 — Polish | done | `feat/m9-polish` | #10 merged 2026-03-09 |
+| M10 — Dashboard Overhaul | not started | `feat/m10-dashboard` | — |
+| M11 — Customize | not started | `feat/m11-customize` | — |
+| M12 — Knowledge Base | not started | `feat/m12-knowledge` | — |
+| M13 — Settings + Embed Widget | not started | `feat/m13-settings-embed` | — |
+| M14 — Landing Page | not started | `feat/m14-landing` | — |
 
-**All modules complete. App is live and fully functional.**
+**M1–M9 complete and deployed. M10–M14 are the next phase — full dashboard overhaul.**
 
 ---
 
@@ -70,11 +102,11 @@ A self-serve portal where sports league owners sign up, configure an AI stats ch
 DEVELOP → REVIEW (/simplify) → TEST → COMMIT → PUSH branch → MERGE → Netlify deploys → VERIFY
 ```
 
-Branch strategy: each feature branch builds on the previous (M9 branches from M8, etc.). `feat/m8-chat-ui` is the Netlify production branch.
+Branch strategy: each feature branch is pushed and merged into `main`. **Netlify production branch is `main`** — pushing to any other branch only triggers cancelled preview deploys, not production deploys. Always merge to `main` to deploy.
 
 ---
 
-## File Structure (actual)
+## File Structure (actual + planned)
 
 ```
 sports-portal/
@@ -82,52 +114,73 @@ sports-portal/
 ├── netlify.toml                    # base=sports-portal, @netlify/plugin-nextjs
 ├── .env.local                      # Local secrets (never committed)
 ├── .env.example                    # Committed env var template
+├── public/
+│   └── widget.js                   # [M13 NEW] Embed widget script — vanilla JS, no deps
 ├── app/
-│   ├── page.tsx                    # Landing page — hero + CTAs
+│   ├── page.tsx                    # Landing page — [M14] full hero + how-it-works rewrite
 │   ├── layout.tsx                  # Root layout with Providers, Geist fonts
 │   ├── globals.css
-│   ├── __tests__/page.test.tsx     # 3 tests: headline, /signup link, /login link
+│   ├── __tests__/page.test.tsx
 │   ├── (auth)/
-│   │   ├── layout.tsx              # Centered card layout
+│   │   ├── layout.tsx
 │   │   ├── login/page.tsx
 │   │   └── signup/page.tsx
 │   ├── setup/
-│   │   ├── page.tsx                # 3-step wizard (client component)
-│   │   └── loading.tsx             # Per-route loading state
+│   │   ├── page.tsx                # [M10] Simplified to redirect('/dashboard')
+│   │   └── loading.tsx             # Per-route loading state (exists)
 │   ├── dashboard/
-│   │   ├── page.tsx                # Owner dashboard (client component)
-│   │   └── loading.tsx             # Per-route loading state
+│   │   ├── layout.tsx              # [M10 NEW] Server component — wraps all dashboard in DashboardShell
+│   │   ├── page.tsx                # [M10] Rewrite — Overview panel (share link + embed code)
+│   │   ├── loading.tsx
+│   │   ├── customize/
+│   │   │   └── page.tsx            # [M11 NEW] Customize panel — name, welcome msg, persona, color
+│   │   ├── data-sources/
+│   │   │   └── page.tsx            # [M12 NEW] Knowledge panel — FAQ + file upload
+│   │   └── settings/
+│   │       └── page.tsx            # [M13 NEW] Settings panel — change league, delete bot
 │   ├── chat/[bot_id]/
-│   │   ├── page.tsx                # Server component; React.cache; generateMetadata
-│   │   └── loading.tsx             # Per-route loading state
+│   │   ├── page.tsx                # [M11] Pass welcomeMessage + primaryColor + isEmbed to ChatWindow
+│   │   └── loading.tsx
 │   └── api/
 │       ├── auth/signup/route.ts
 │       ├── auth/[...nextauth]/route.ts
-│       ├── bots/route.ts           # POST /api/bots
-│       ├── bots/me/route.ts        # GET /api/bots/me
-│       ├── bots/[bot_id]/route.ts  # GET /api/bots/[bot_id]
-│       └── chat/route.ts           # POST /api/chat (streaming proxy)
+│       ├── bots/route.ts           # POST /api/bots (unchanged)
+│       ├── bots/me/route.ts        # [M11] +PUT, +DELETE; extend GET response
+│       ├── bots/[bot_id]/route.ts  # [M11] Return welcome_message + primary_color
+│       ├── chat/route.ts           # [M12] Fetch + inject DataSources as system_context
+│       └── data-sources/
+│           ├── route.ts            # [M12 NEW] GET + POST (FAQ entries)
+│           ├── upload/route.ts     # [M12 NEW] POST multipart — parse PDF/CSV/TXT
+│           └── [id]/route.ts       # [M12 NEW] DELETE
 ├── lib/
-│   ├── mongodb.ts                  # Singleton connection (global ?? cache pattern)
-│   ├── auth-helpers.ts             # validateCredentials + timing-safe DUMMY_HASH
-│   ├── bot-registry.ts             # sport:league → endpoint URL map (thunk pattern)
+│   ├── mongodb.ts
+│   ├── auth-helpers.ts
+│   ├── bot-registry.ts
 │   └── models/
 │       ├── User.ts
-│       └── Bot.ts
+│       ├── Bot.ts                  # [M11] +welcome_message, +persona, +primary_color (optional)
+│       └── DataSource.ts           # [M12 NEW] Knowledge entries model
 ├── components/
-│   ├── providers.tsx               # SessionProvider wrapper
+│   ├── providers.tsx
+│   ├── dashboard/
+│   │   ├── DashboardShell.tsx      # [M10 NEW] 'use client' — sidebar + layout
+│   │   └── CreateBotModal.tsx      # [M10 NEW] 3-step modal for bot creation
+│   ├── ui/
+│   │   └── Toast.tsx               # [M12 NEW] 'use client' — fixed-position toast
 │   └── chat/
-│       ├── ChatWindow.tsx
+│       ├── ChatWindow.tsx          # [M11] +welcomeMessage, +primaryColor, +isEmbed props
 │       ├── MessageBubble.tsx
 │       ├── ChatInput.tsx
 │       └── StreamingCursor.tsx
 ├── types/
-│   ├── global.d.ts                 # _mongoose hot-reload cache type
-│   └── next-auth.d.ts              # Session + JWT extended with user.id
-├── auth.config.ts                  # Edge-safe NextAuth config (no DB imports)
-├── auth.ts                         # Full NextAuth config (server only)
-└── middleware.ts                   # Protects /dashboard, /setup — imports auth.config only
+│   ├── global.d.ts
+│   └── next-auth.d.ts
+├── auth.config.ts
+├── auth.ts
+└── middleware.ts
 ```
+
+Legend: `[Mx]` = modified in module x · `[Mx NEW]` = new file in module x
 
 ---
 
@@ -138,17 +191,27 @@ sports-portal/
 | POST | `/api/auth/signup` | None | Create owner account |
 | POST/GET | `/api/auth/[...nextauth]` | — | NextAuth signin/signout/session |
 | POST | `/api/bots` | Session | Create bot config |
-| GET | `/api/bots/me` | Session | Owner's bot (dashboard) |
-| GET | `/api/bots/[bot_id]` | None | Bot info (chat page) |
-| POST | `/api/chat` | None | Proxy to bot, stream response |
+| GET | `/api/bots/me` | Session | Owner's bot — includes welcome_message, persona, primary_color, created_at |
+| PUT | `/api/bots/me` | Session | Update bot settings (name, welcome msg, persona, color, sport/league) |
+| DELETE | `/api/bots/me` | Session | Delete bot + cascade DataSources |
+| GET | `/api/bots/[bot_id]` | None | Bot info — includes welcome_message + primary_color (fan chat page) |
+| POST | `/api/chat` | None | Proxy to bot with DataSource context injected, stream response |
+| GET | `/api/data-sources` | Session | List owner's knowledge entries; `?type=faq\|file` filter |
+| POST | `/api/data-sources` | Session | Create FAQ text entry |
+| POST | `/api/data-sources/upload` | Session | Upload + parse PDF/CSV/TXT — stores extracted text |
+| DELETE | `/api/data-sources/[id]` | Session | Delete knowledge entry (scoped to owner) |
 
 ---
 
 ## User Flows
 
-**Owner:** `/` → signup → `/setup` (3-step wizard) → `/dashboard` (see URL + preview)
+**Owner (first time):** `/` → signup → `/dashboard` (empty state) → "Create chatbot" modal → Overview (share link + embed code) → Customize → Knowledge → share link with fans
 
-**Fan:** receives link → `/chat/{bot_id}` → chats with bot (no login needed)
+**Owner (returning):** `/login` → `/dashboard` (Overview) → any sidebar section
+
+**Fan via link:** receives `yourapp.com/chat/{bot_id}` → full-page chat UI (no login)
+
+**Fan via embed:** visits owner's website → floating chat bubble → clicks → iframe chat panel
 
 ---
 
@@ -156,12 +219,15 @@ sports-portal/
 
 | Page | Auth | Purpose |
 |---|---|---|
-| `/` | None | Landing — hero, "Get started free" → `/signup`, "Log in" → `/login` |
+| `/` | None | Landing — hero, how-it-works, feature highlights, CTAs |
 | `/signup` | None | Owner registration |
 | `/login` | None | Owner login |
-| `/setup` | Required | 3-step wizard: name → sport → league |
-| `/dashboard` | Required | Bot info + hosted URL + copy + preview |
-| `/chat/[bot_id]` | None | Fan-facing chat UI with SSE streaming |
+| `/setup` | Required | Redirects to `/dashboard` (setup now in modal) |
+| `/dashboard` | Required | Overview — bot info, shareable link, embed widget code |
+| `/dashboard/customize` | Required | Edit name, welcome message, persona, brand color |
+| `/dashboard/data-sources` | Required | Knowledge base — FAQ entries + file uploads |
+| `/dashboard/settings` | Required | Change league, delete bot |
+| `/chat/[bot_id]` | None | Fan-facing chat UI — full page or embed mode (`?embed=true`) |
 
 ---
 
@@ -170,24 +236,42 @@ sports-portal/
 **`bots` collection** (`lib/models/Bot.ts`):
 ```ts
 {
-  owner_id: String,        // NextAuth user id; unique: true — enforces 1 bot per owner at DB level
-  bot_name: String,
-  sport: String,           // e.g. "soccer"
-  league: String,          // e.g. "english-premier-league"
-  bot_endpoint_url: String,// pre-built bot streaming endpoint (never returned in API responses)
-  created_at: Date         // snake_case; default: () => new Date()
+  owner_id: String,          // NextAuth user id; unique: true — enforces 1 bot per owner
+  bot_name: String,          // required
+  sport: String,             // e.g. "soccer"
+  league: String,            // e.g. "english-premier-league"
+  bot_endpoint_url: String,  // pre-built bot endpoint (never returned in API responses)
+  welcome_message?: String,  // optional — custom first message shown to fans
+  persona?: String,          // optional — 'friendly' | 'professional' | 'enthusiastic'
+  primary_color?: String,    // optional — hex e.g. "#3B82F6", applied to chat header
+  created_at: Date           // default: () => new Date()
 }
 ```
 
-**`users` collection** (`lib/models/User.ts`):
+**`data_sources` collection** (`lib/models/DataSource.ts`) — NEW:
 ```ts
 {
-  email: String,           // unique, lowercase, trim, match regex /^\S+@\S+\.\S+$/
+  owner_id: String,          // session user id
+  bot_id: String,            // owner's bot ObjectId string
+  type: String,              // 'faq' | 'file'
+  title: String,             // required, max 200 chars
+  content: String,           // required — FAQ text OR extracted file text
+  file_size?: Number,        // original file bytes (display only)
+  original_filename?: String,// display name for file entries
+  created_at: Date           // default: () => new Date()
+}
+// Index: { bot_id: 1 }
+```
+
+**`users` collection** (`lib/models/User.ts`) — unchanged:
+```ts
+{
+  email: String,             // unique, lowercase, trim, match regex /^\S+@\S+\.\S+$/
   passwordHash: String,
-  createdAt: Date          // camelCase; default: () => new Date()
+  createdAt: Date            // camelCase; default: () => new Date()
 }
 ```
-Note: `createdAt` (User) vs `created_at` (Bot) — intentional, both match their spec definitions.
+Note: `createdAt` (User) vs `created_at` (Bot/DataSource) — intentional.
 
 ---
 
@@ -210,95 +294,20 @@ In production: replace `MOCK_BOT_URL` with per-league env vars (e.g. `EPL_BOT_UR
 
 ---
 
-## M3 — Auth Implementation Notes
+## Key Architectural Decisions (M10–M14)
 
-**Key files:**
-- `auth.config.ts` — edge-safe: `trustHost`, `secret`, `pages`, `session: {strategy:'jwt'}`, `authorized` callback. No DB imports.
-- `auth.ts` — extends `authConfig`, adds Credentials provider + `jwt`/`session` callbacks. Server-only.
-- `middleware.ts` — imports `auth.config.ts` ONLY, never `auth.ts`
-- `lib/auth-helpers.ts` — `validateCredentials`: DB lookup + bcrypt compare. Timing-safe via real DUMMY_HASH (60 chars).
-
-**Critical deployment gotchas:**
-1. **Edge Runtime** — `middleware.ts` must NEVER import `auth.ts`. Mongoose uses `eval`, banned in Edge Runtime.
-2. **`trustHost: true`** — required in `authConfig` for NextAuth v5 behind Netlify proxy. Without it: 500 on all auth endpoints.
-3. **`AUTH_SECRET`** — `secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET` — v5 beta uses `AUTH_SECRET`.
-4. **MongoDB Atlas IP** — `0.0.0.0/0` required. Netlify uses dynamic AWS IPs.
-5. **DUMMY_HASH** — must be a real `bcrypt.hash()` output (60 chars) or timing oracle protection is defeated.
-
----
-
-## M4 — Bot Registry Implementation Notes
-
-- `getEndpointUrl` returns `null` (never throws) for unsupported combos or unset env var.
-- `LEAGUES_BY_SPORT` typed as `Record<Sport, ...>` — TypeScript enforces exhaustiveness on new sports.
-- `nfl:nfl` is intentional — NFL has no sub-leagues.
-
----
-
-## M5 — Wizard + Bot API Implementation Notes
-
-- Auth check before body parsing — fail fast before DB work.
-- `connectDB()` inside the same `try/catch` as `Bot.create` — prevents unhandled rejections on DB failure.
-- Sport/league validated at two layers: `SUPPORTED_SPORTS`/`LEAGUES_BY_SPORT` then `getEndpointUrl` (defence-in-depth).
-- `Bot.create` catches `code 11000` → 409; all other DB errors rethrow.
-- `handleBack` uses `Math.max(1, step - 1)` — safe against step underflow.
-- All form inputs have `text-gray-900` — without it, Tailwind CSS variable inheritance renders text invisible.
-
----
-
-## M6 — Dashboard + Bot APIs Implementation Notes
-
-- `GET /api/bots/[bot_id]`: `mongoose.Types.ObjectId.isValid()` before `findById` — invalid ObjectId → 404.
-- `bot_endpoint_url` and `owner_id` NEVER returned in any API response.
-- `getChatUrl` uses `process.env.NEXT_PUBLIC_APP_URL` — must be set in Netlify env vars for production URLs to be correct.
-- Dashboard error state has a "Log out" button — prevents user being trapped.
-- `copyTimer` stored in `useRef` — cleared on unmount and on re-click.
-- Next.js 14 params are synchronous: `{ params }: { params: { bot_id: string } }` — NOT async (that's Next.js 15+).
-
----
-
-## M7 — Chat Proxy API Implementation Notes
-
-- Body size: `Content-Length` header fast-path + `TextEncoder().encode(raw).byteLength` definitive check (50kb limit).
-- `Number()` not `parseInt()` for header values — `parseInt` returns silent NaN on malformed headers.
-- `botRes.body` is `ReadableStream | null` — null check required before passing to `new Response()`.
-- `X-Accel-Buffering: no` on SSE responses — nginx/Netlify proxy buffers SSE by default without it.
-- `bot_endpoint_url` sourced exclusively from DB — never from user input.
-
----
-
-## M8 — Chat UI Implementation Notes
-
-- `app/chat/[bot_id]/page.tsx` — server component, `force-dynamic`, `React.cache` on `fetchBotData` so `generateMetadata` and page share one DB round-trip.
-- SSE parsing: `buffer += decode(chunk,{stream:true})`, split on `\n`, lines starting with `data: `, `[DONE]` terminates.
-- `messagesRef` pattern: ref kept in sync with state so async `handleSend` reads current history without being a `useCallback` dependency.
-- `handleSend` wrapped in `useCallback([botId, isStreaming])` — `ChatInput` does not re-render per token.
-- Stable keys: `crypto.randomUUID()` on message creation — never array index.
-- Scroll: `prevLengthRef` tracks message count; smooth on new message, instant on token append (no jank).
-- AbortError guard: `err instanceof DOMException && err.name === 'AbortError'`.
-- Bot history to API: skip index 0 (welcome message), map `role: 'bot'` → `role: 'assistant'`.
-
----
-
-## M9 — Polish Implementation Notes
-
-**Files changed:**
-- `app/page.tsx` — hero landing: `<main>` landmark, `metadata` export, headline, 3 feature bullets, "Get started free" → `/signup` + "Log in" → `/login` (both with `focus:ring-2`), mobile-safe (`flex-col sm:flex-row`).
-- `app/setup/page.tsx` — replaced `return null` with loading UI while mount-time bot-check fetch is in flight.
-- `app/setup/loading.tsx` + `app/dashboard/loading.tsx` — per-route loading states (cover code-split latency on first navigation).
-- `app/__tests__/page.test.tsx` — 3 tests: headline, `/signup` link, `/login` link.
-
-**PR review gaps found and fixed:**
-1. `<div>` → `<main>` on landing page (semantic HTML regression from placeholder)
-2. `focus:ring` classes added to both CTA links (consistent with rest of app)
-3. `metadata` export added to landing page (page-specific title + description)
-
-**Tests:** 115 passing. Lint, type-check, test all exit 0.
-
----
+| Decision | Choice | Reason |
+|---|---|---|
+| Dashboard routing | Next.js nested routes (`/dashboard/*`) | Bookmarkable URLs, middleware protection inherited, `usePathname()` drives active nav |
+| Embed widget | `public/widget.js` injects iframe pointing to `/chat/[id]?embed=true` | Reuses existing chat page; zero duplication; no external dependencies |
+| Knowledge injection | `/api/chat` fetches DataSources and sends `system_context` to bot endpoint | Mock bot ignores it; real bot can use it; no AI processing in portal |
+| File storage | Parse on upload, store extracted text in MongoDB only | No S3/Blob service needed; binary discarded after extraction |
+| Bot creation | Modal in dashboard, not a separate page | Better UX; owners stay in context; `/setup` becomes a redirect |
+| Sidebar navigation | `DashboardShell` (`'use client'`) + `dashboard/layout.tsx` (server) | Server layout calls `auth()`; client shell handles `usePathname` + mobile state |
 
 ## Key Files to Reference
 
 - Full PRD: `PRD.md`
 - Module tracker: `TRACKER.md`
+- Implementation plan: `.claude/plans/humble-wobbling-hippo.md`
 - This file: `CONTEXT.md`

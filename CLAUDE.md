@@ -1,6 +1,9 @@
 # Sports Chatbot Portal — CLAUDE.md
 
-See @CONTEXT.md for full architecture details, @PRD.md for product requirements, and @TRACKER.md for module status.
+See @CONTEXT.md for full architecture details. PRD.md has full product requirements; TRACKER.md has module acceptance criteria — load on-demand if needed.
+
+## Product Scope (read this first)
+This portal is an **owner configuration tool** — its job is to help a league owner configure their chatbot as fast as possible. The fan experience and the AI bot are owned by a separate bot team. Do not engineer for fan UX or AI consumption. When in doubt: if the feature is about collecting or displaying owner inputs, it belongs here; if it's about how the bot responds to fans, it does not.
 
 ## Dev Commands
 ```bash
@@ -26,9 +29,12 @@ IMPORTANT: Always run all three before committing. Fix every error — do not su
 
 ## Key Decisions
 - **Bot registry:** `lib/bot-registry.ts` maps `"sport:league"` → streaming endpoint URL. In dev, all point to `MOCK_BOT_URL`.
-- **Chat proxy:** `POST /api/chat` fetches `bot_endpoint_url` from DB, forwards `{ messages }`, pipes stream back — no processing.
+- **Chat proxy:** `POST /api/chat` fetches `bot_endpoint_url` from DB, fetches owner's DataSources, forwards `{ messages, system_context }`, pipes stream back.
 - **1 bot per owner** — `POST /api/bots` returns 409 if one already exists.
 - **`bot_id` = MongoDB ObjectId** — not guessable; chat page is intentionally public (no auth).
+- **Embed widget:** `public/widget.js` — vanilla JS, reads `data-bot-id`, injects floating iframe to `/chat/[id]?embed=true`.
+- **File storage:** parse on upload, store extracted text in DataSource.content — no binary storage, no S3.
+- **Dashboard routing:** nested Next.js routes under `/dashboard/*`; `DashboardShell` (`'use client'`) handles sidebar + mobile; `dashboard/layout.tsx` (server) handles auth.
 
 ## When Compacting
 Always preserve: current module name and status, list of files modified this session, last test/lint command output, and any unresolved errors.
