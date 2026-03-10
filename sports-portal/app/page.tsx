@@ -45,9 +45,17 @@ const features = [
 export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Skip to content */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded-lg focus:text-sm focus:font-medium"
+      >
+        Skip to content
+      </a>
+
       {/* Nav */}
       <header className="bg-white border-b border-gray-200">
-        <nav className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <nav aria-label="Main" className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <span className="text-lg font-semibold text-gray-900">
             Sports Chatbot Portal
           </span>
@@ -68,11 +76,11 @@ export default function Home() {
         </nav>
       </header>
 
-      <main>
+      <main id="main-content">
         {/* Hero */}
-        <section className="bg-gray-50 py-20 sm:py-28">
+        <section aria-labelledby="hero-heading" className="bg-gray-50 py-20 sm:py-28">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
+            <h1 id="hero-heading" className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
               Launch an AI Stats Chatbot for Your League
             </h1>
             <p className="mt-6 text-lg text-gray-500 leading-relaxed max-w-2xl mx-auto">
@@ -97,9 +105,9 @@ export default function Home() {
         </section>
 
         {/* How it works */}
-        <section className="bg-white py-20">
+        <section aria-labelledby="how-it-works-heading" className="bg-white py-20">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center">
+            <h2 id="how-it-works-heading" className="text-2xl sm:text-3xl font-bold text-gray-900 text-center">
               How it works
             </h2>
             <p className="mt-3 text-gray-500 text-center max-w-xl mx-auto">
@@ -124,9 +132,9 @@ export default function Home() {
         </section>
 
         {/* Feature highlights */}
-        <section className="bg-gray-50 py-20">
+        <section aria-labelledby="features-heading" className="bg-gray-50 py-20">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center">
+            <h2 id="features-heading" className="text-2xl sm:text-3xl font-bold text-gray-900 text-center">
               Everything you need
             </h2>
             <p className="mt-3 text-gray-500 text-center max-w-xl mx-auto">
@@ -151,9 +159,9 @@ export default function Home() {
         </section>
 
         {/* Bottom CTA */}
-        <section className="bg-white py-20">
+        <section aria-labelledby="cta-heading" className="bg-white py-20">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            <h2 id="cta-heading" className="text-2xl sm:text-3xl font-bold text-gray-900">
               Ready to launch your chatbot?
             </h2>
             <p className="mt-3 text-gray-500">
