@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import pdfParse from 'pdf-parse'
 import { auth } from '@/auth'
 import { connectDB } from '@/lib/mongodb'
 import { Bot } from '@/lib/models/Bot'
@@ -21,6 +20,7 @@ async function extractText(file: File, ext: string): Promise<string> {
   }
 
   if (ext === '.pdf') {
+    const pdfParse = (await import('pdf-parse')).default
     const result = await pdfParse(buffer)
     return result.text
   }
