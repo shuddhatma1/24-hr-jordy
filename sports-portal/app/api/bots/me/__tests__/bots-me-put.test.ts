@@ -15,6 +15,7 @@ const mockedAuth = auth as unknown as MockedFunction<() => Promise<unknown>>
 let mongod: MongoMemoryServer
 
 beforeAll(async () => {
+  process.env.MOCK_BOT_URL = 'http://localhost:3001/chat'
   mongod = await MongoMemoryServer.create()
   await mongoose.connect(mongod.getUri())
 })
@@ -27,6 +28,7 @@ afterEach(async () => {
 })
 
 afterAll(async () => {
+  delete process.env.MOCK_BOT_URL
   await mongoose.disconnect()
   await mongod.stop()
 })
@@ -180,5 +182,83 @@ describe('PUT /api/bots/me', () => {
     expect(res.status).toBe(500)
     const data = await res.json()
     expect(data.error).toBe('Internal server error')
+  })
+
+  // --- Sport/league change tests ---
+
+  it('updates sport and league when both are provided', async () => {
+    mockSession('owner-put-sl-1')
+    await Bot.create({
+      owner_id: 'owner-put-sl-1',
+      bot_name: 'Bot',
+      sport: 'soccer',
+      league: 'english-premier-league',
+      bot_endpoint_url: 'http://localhost:3001/chat',
+    })
+    const res = await PUT(
+      makeRequest({ bot_name: 'Bot', sport: 'basketball', league: 'nba' })
+    )
+    expect(res.status).toBe(200)
+    const data = await res.json()
+    expect(data.sport).toBe('basketball')
+    expect(data.league).toBe('nba')
+  })
+
+  it('returns 400 when sport is provided without league', async () => {
+    mockSession('owner-put-sl-2')
+    const res = await PUT(makeRequest({ bot_name: 'Bot', sport: 'soccer' }))
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toMatch(/sport and league/)
+  })
+
+  it('returns 400 when league is provided without sport', async () => {
+    mockSession('owner-put-sl-3')
+    const res = await PUT(makeRequest({ bot_name: 'Bot', league: 'nba' }))
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toMatch(/sport and league/)
+  })
+
+  it('returns 400 for an invalid sport', async () => {
+    mockSession('owner-put-sl-4')
+    const res = await PUT(
+      makeRequest({ bot_name: 'Bot', sport: 'cricket', league: 'ipl' })
+    )
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toMatch(/sport/)
+  })
+
+  it('returns 400 when league does not match sport', async () => {
+    mockSession('owner-put-sl-5')
+    const res = await PUT(
+      makeRequest({ bot_name: 'Bot', sport: 'soccer', league: 'nba' })
+    )
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toMatch(/league/)
+  })
+
+  it('does not change sport/league when neither is provided', async () => {
+    mockSession('owner-put-sl-6')
+    await Bot.create({
+      owner_id: 'owner-put-sl-6',
+      bot_name: 'Bot',
+      sport: 'soccer',
+      league: 'english-premier-league',
+      bot_endpoint_url: 'http://localhost:3001/chat',
+    })
+    const res = await PUT(makeRequest({ bot_name: 'Renamed Bot' }))
+    expect(res.status).toBe(200)
+    const data = await res.json()
+    expect(data.bot_name).toBe('Renamed Bot')
+    expect(data.sport).toBe('soccer')
+    expect(data.league).toBe('english-premier-league')
+
+    // Also verify DB state directly
+    const dbBot = await Bot.findOne({ owner_id: 'owner-put-sl-6' })
+    expect(dbBot?.sport).toBe('soccer')
+    expect(dbBot?.league).toBe('english-premier-league')
   })
 })

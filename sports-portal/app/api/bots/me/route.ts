@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { connectDB } from '@/lib/mongodb'
 import { Bot } from '@/lib/models/Bot'
+import { DataSource } from '@/lib/models/DataSource'
+import { getEndpointUrl, SUPPORTED_SPORTS, LEAGUES_BY_SPORT, type Sport } from '@/lib/bot-registry'
 
 export async function GET() {
   const session = await auth()
@@ -51,7 +53,7 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
-  const { bot_name, welcome_message, persona, primary_color } = body as Record<string, unknown>
+  const { bot_name, welcome_message, persona, primary_color, sport, league } = body as Record<string, unknown>
 
   if (typeof bot_name !== 'string' || !bot_name.trim()) {
     return NextResponse.json({ error: 'bot_name is required' }, { status: 400 })
@@ -83,18 +85,47 @@ export async function PUT(request: Request) {
     }
   }
 
+  // Sport and league must be provided together (both or neither)
+  let newEndpointUrl: string | null = null
+  if (sport != null || league != null) {
+    if (
+      typeof sport !== 'string' || !sport ||
+      typeof league !== 'string' || !league
+    ) {
+      return NextResponse.json(
+        { error: 'sport and league must be provided together' },
+        { status: 400 }
+      )
+    }
+    if (!SUPPORTED_SPORTS.includes(sport as Sport)) {
+      return NextResponse.json({ error: 'Invalid sport' }, { status: 400 })
+    }
+    const leaguesForSport = LEAGUES_BY_SPORT[sport as Sport]
+    if (!leaguesForSport.some((l) => l.value === league)) {
+      return NextResponse.json({ error: 'Invalid league for this sport' }, { status: 400 })
+    }
+    newEndpointUrl = getEndpointUrl(sport, league)
+    if (!newEndpointUrl) {
+      return NextResponse.json({ error: "This league isn't available yet" }, { status: 400 })
+    }
+  }
+
   try {
     await connectDB()
+    const $set: Record<string, unknown> = {
+      bot_name: bot_name.trim(),
+      welcome_message: (welcome_message as string | null | undefined) || null,
+      persona: (persona as string | null | undefined) || null,
+      primary_color: (primary_color as string | null | undefined) || null,
+    }
+    if (sport != null && league != null && newEndpointUrl) {
+      $set.sport = sport
+      $set.league = league
+      $set.bot_endpoint_url = newEndpointUrl
+    }
     const bot = await Bot.findOneAndUpdate(
       { owner_id },
-      {
-        $set: {
-          bot_name: bot_name.trim(),
-          welcome_message: (welcome_message as string | null | undefined) || null,
-          persona: (persona as string | null | undefined) || null,
-          primary_color: (primary_color as string | null | undefined) || null,
-        },
-      },
+      { $set },
       { new: true }
     )
     if (!bot) {
@@ -110,6 +141,33 @@ export async function PUT(request: Request) {
       persona: bot.persona ?? null,
       primary_color: bot.primary_color ?? null,
     })
+  } catch {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+export async function DELETE() {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  const owner_id = session.user.id
+
+  try {
+    await connectDB()
+    const bot = await Bot.findOneAndDelete({ owner_id })
+    if (!bot) {
+      return NextResponse.json({ error: 'No bot found' }, { status: 404 })
+    }
+
+    // Cascade: delete all DataSources for this bot (non-fatal)
+    try {
+      await DataSource.deleteMany({ bot_id: bot._id.toString() })
+    } catch {
+      // Orphaned data sources are harmless — bot is already deleted
+    }
+
+    return NextResponse.json({ success: true })
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }

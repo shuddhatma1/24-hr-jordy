@@ -24,7 +24,7 @@ interface Props {
   leagueLabel: string
   welcomeMessage?: string
   primaryColor?: string
-  isEmbed?: boolean // reserved for M13 embed mode — passed through but not yet used
+  isEmbed?: boolean
 }
 
 export default function ChatWindow({
@@ -33,6 +33,7 @@ export default function ChatWindow({
   leagueLabel,
   welcomeMessage,
   primaryColor,
+  isEmbed,
 }: Props) {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -198,7 +199,7 @@ export default function ChatWindow({
   )
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className={`flex flex-col ${isEmbed ? 'h-full' : 'h-screen'} bg-gray-50`}>
       {/* Header — applies owner's brand color when set, falls back to white */}
       <header
         className={`border-b px-4 py-3 flex-shrink-0 ${primaryColor ? '' : 'bg-white border-gray-200'}`}
@@ -240,6 +241,20 @@ export default function ChatWindow({
 
       {/* Input bar */}
       <ChatInput onSend={handleSend} disabled={isStreaming} />
+
+      {isEmbed && (
+        <div className="text-center py-1 text-xs text-gray-400 border-t border-gray-100 bg-white flex-shrink-0">
+          Powered by{' '}
+          <a
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-500 hover:underline"
+          >
+            Bot Portal
+          </a>
+        </div>
+      )}
     </div>
   )
 }
