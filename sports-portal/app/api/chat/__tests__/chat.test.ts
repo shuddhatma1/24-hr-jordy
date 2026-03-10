@@ -3,9 +3,13 @@ import { MongoMemoryServer } from 'mongodb-memory-server'
 import mongoose from 'mongoose'
 
 vi.mock('@/lib/mongodb', () => ({ connectDB: vi.fn().mockResolvedValue(undefined) }))
+vi.mock('@/lib/models/DataSource', () => ({
+  DataSource: { find: vi.fn().mockResolvedValue([]) },
+}))
 
 import { POST } from '../route'
 import { Bot } from '@/lib/models/Bot'
+import { DataSource } from '@/lib/models/DataSource'
 
 let mongod: MongoMemoryServer
 
@@ -151,5 +155,55 @@ describe('POST /api/chat', () => {
     expect(res.status).toBe(400)
     const data = await res.json()
     expect(data.error).toBe('Invalid request body')
+  })
+
+  it('sends empty system_context when no DataSources exist', async () => {
+    const bot = await insertBot()
+    const stream = new ReadableStream({
+      start(c) { c.enqueue(new TextEncoder().encode('data: [DONE]\n\n')); c.close() },
+    })
+    const fetchMock = vi.fn().mockResolvedValue(new Response(stream, { status: 200 }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await POST(makeReq({ bot_id: bot._id.toString(), messages: [] }))
+
+    const callBody = JSON.parse(fetchMock.mock.calls[0][1].body)
+    expect(callBody.system_context).toBe('')
+  })
+
+  it('sends formatted system_context when DataSources exist', async () => {
+    const bot = await insertBot()
+    const stream = new ReadableStream({
+      start(c) { c.enqueue(new TextEncoder().encode('data: [DONE]\n\n')); c.close() },
+    })
+    const fetchMock = vi.fn().mockResolvedValue(new Response(stream, { status: 200 }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    vi.mocked(DataSource.find).mockResolvedValueOnce([
+      { title: 'FAQ 1', content: 'Answer 1', _id: 'id1' },
+      { title: 'FAQ 2', content: 'Answer 2', _id: 'id2' },
+    ] as never)
+
+    await POST(makeReq({ bot_id: bot._id.toString(), messages: [] }))
+
+    const callBody = JSON.parse(fetchMock.mock.calls[0][1].body)
+    expect(callBody.system_context).toBe('FAQ 1:\nAnswer 1\n\n---\n\nFAQ 2:\nAnswer 2')
+  })
+
+  it('proceeds normally when DataSource.find throws (non-fatal)', async () => {
+    const bot = await insertBot()
+    const stream = new ReadableStream({
+      start(c) {
+        c.enqueue(new TextEncoder().encode('data: {"token":"hi"}\n\n'))
+        c.enqueue(new TextEncoder().encode('data: [DONE]\n\n'))
+        c.close()
+      },
+    })
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(stream, { status: 200 })))
+    vi.mocked(DataSource.find).mockRejectedValueOnce(new Error('DB error'))
+
+    const res = await POST(makeReq({ bot_id: bot._id.toString(), messages: [] }))
+    expect(res.status).toBe(200)
+    expect(res.headers.get('content-type')).toBe('text/event-stream')
   })
 })

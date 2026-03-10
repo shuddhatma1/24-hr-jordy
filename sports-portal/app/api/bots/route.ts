@@ -18,6 +18,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+  }
+
   const { bot_name, sport, league } = body as Record<string, unknown>
 
   if (!bot_name || typeof bot_name !== 'string' || bot_name.trim().length === 0) {
@@ -53,6 +57,6 @@ export async function POST(req: Request) {
     if ((err as { code?: number }).code === 11000) {
       return NextResponse.json({ error: 'You already have a bot configured' }, { status: 409 })
     }
-    throw err
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

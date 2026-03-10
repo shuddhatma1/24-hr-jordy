@@ -88,11 +88,11 @@ A self-serve portal where sports league owners sign up, configure an AI stats ch
 | M9 — Polish | done | `feat/m9-polish` | #10 merged 2026-03-09 |
 | M10 — Dashboard Overhaul | done | `feat/m10-dashboard` | #11 merged 2026-03-10 |
 | M11 — Customize | done | `feat/m11-customize` | #12 |
-| M12 — Knowledge Base | not started | `feat/m12-knowledge` | — |
+| M12 — Knowledge Base | done + hardened | `feat/m12-knowledge` | #13 (pending merge — rebase base to `main`) |
 | M13 — Settings + Embed Widget | not started | `feat/m13-settings-embed` | — |
 | M14 — Landing Page | not started | `feat/m14-landing` | — |
 
-**M1–M11 complete and deployed. M12–M14 are the next phase.**
+**M1–M12 complete. M12 has security hardening applied (not yet committed). M13–M14 are the next phase.**
 
 ---
 
@@ -133,7 +133,8 @@ sports-portal/
 │   │   ├── page.tsx                # [M10] Rewrite — Overview panel (share link + embed code)
 │   │   ├── loading.tsx
 │   │   ├── customize/
-│   │   │   └── page.tsx            # [M11 NEW] Customize panel — name, welcome msg, persona, color
+│   │   │   ├── page.tsx            # [M11 NEW] Customize panel — name, welcome msg, persona, color
+│   │   │   └── __tests__/customize-page.test.tsx  # [M11 NEW] 8 tests — load, 404, 500, save/error, persona
 │   │   ├── data-sources/
 │   │   │   └── page.tsx            # [M12 NEW] Knowledge panel — FAQ + file upload
 │   │   └── settings/
@@ -251,16 +252,16 @@ Legend: `[Mx]` = modified in module x · `[Mx NEW]` = new file in module x
 **`data_sources` collection** (`lib/models/DataSource.ts`) — NEW:
 ```ts
 {
-  owner_id: String,          // session user id
-  bot_id: String,            // owner's bot ObjectId string
+  owner_id: String,          // session user id; indexed
+  bot_id: String,            // owner's bot ObjectId string; indexed
   type: String,              // 'faq' | 'file'
   title: String,             // required, max 200 chars
-  content: String,           // required — FAQ text OR extracted file text
+  content: String,           // required, max 50000 chars — FAQ text OR extracted file text
   file_size?: Number,        // original file bytes (display only)
-  original_filename?: String,// display name for file entries
+  original_filename?: String,// display name for file entries (sanitized, max 200 chars)
   created_at: Date           // default: () => new Date()
 }
-// Index: { bot_id: 1 }
+// Indexes: { owner_id: 1 }, { bot_id: 1 }
 ```
 
 **`users` collection** (`lib/models/User.ts`) — unchanged:
@@ -300,8 +301,10 @@ In production: replace `MOCK_BOT_URL` with per-league env vars (e.g. `EPL_BOT_UR
 |---|---|---|
 | Dashboard routing | Next.js nested routes (`/dashboard/*`) | Bookmarkable URLs, middleware protection inherited, `usePathname()` drives active nav |
 | Embed widget | `public/widget.js` injects iframe pointing to `/chat/[id]?embed=true` | Reuses existing chat page; zero duplication; no external dependencies |
-| Knowledge injection | `/api/chat` fetches DataSources and sends `system_context` to bot endpoint | Mock bot ignores it; real bot can use it; no AI processing in portal |
-| File storage | Parse on upload, store extracted text in MongoDB only | No S3/Blob service needed; binary discarded after extraction |
+| Knowledge injection | `/api/chat` fetches DataSources, caps at 100K chars, sends `system_context` to bot endpoint | Mock bot ignores it; real bot can use it; no AI processing in portal; bounded payload |
+| File storage | Parse on upload, truncate to 50K chars, store in MongoDB only | No S3/Blob service needed; binary discarded after extraction; content capped |
+| Bot fetch timeout | `AbortController` with 30s timeout on `/api/chat` → bot endpoint | Prevents DoS from hanging bot endpoints |
+| Message validation | `isValidMessage()` checks role (user/assistant/system) + content (string) | Prevents arbitrary data forwarded to bot endpoint |
 | Bot creation | Modal in dashboard, not a separate page | Better UX; owners stay in context; `/setup` becomes a redirect |
 | Sidebar navigation | `DashboardShell` (`'use client'`) + `dashboard/layout.tsx` (server) | Server layout calls `auth()`; client shell handles `usePathname` + mobile state |
 

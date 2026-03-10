@@ -10,7 +10,7 @@
 |---|---|
 | GitHub | https://github.com/shuddhatma1/24-hr-jordy.git |
 | Netlify URL | https://24-hr-jordy.netlify.app |
-| Last deployed | 2026-03-09 (M9 — all modules complete) |
+| Last deployed | 2026-03-10 (M11 — Customize, PR #12 merged) |
 
 ---
 
@@ -27,9 +27,9 @@
 | M7 | Chat Proxy API | done | `feat/m7-chat-api` | Yes | PR #8 merged |
 | M8 | Chat UI | done | `feat/m8-chat-ui` | Yes | PR #9 merged 2026-03-09 |
 | M9 | Polish | done | `feat/m9-polish` | Yes | PR #10 merged 2026-03-09 |
-| M10 | Dashboard Overhaul | done | `feat/m10-dashboard` | No | Sidebar, Overview panel, bot creation modal |
-| M11 | Customize | not started | `feat/m11-customize` | No | Welcome msg, persona, brand color — wired to fan chat |
-| M12 | Knowledge Base | not started | `feat/m12-knowledge` | No | FAQ + file upload (PDF/CSV/TXT); portal stores inputs — bot team handles consumption |
+| M10 | Dashboard Overhaul | done | `feat/m10-dashboard` | Yes | PR #11 merged 2026-03-10 |
+| M11 | Customize | done | `feat/m11-customize` | Yes | PR #12 merged 2026-03-10 |
+| M12 | Knowledge Base | done | `feat/m12-knowledge` | No | FAQ + file upload (PDF/CSV/TXT); portal stores inputs — bot team handles consumption |
 | M13 | Settings + Embed Widget | not started | `feat/m13-settings-embed` | No | Change league, delete bot, widget.js |
 | M14 | Landing Page | not started | `feat/m14-landing` | No | Hero, how-it-works, feature highlights |
 | M15 | Analytics Dashboard | not started | `feat/m15-analytics` | No | Owner usage analytics — sidebar "Coming Soon" item added in M10 |
@@ -147,6 +147,9 @@
 | 2026-03-09 | M7 post-review | null body guard (400 not 500), parseInt→Number, botRes.body null check, X-Accel-Buffering header, fetch timeout TODO, 2 new tests, 68 tests total | triggered |
 | 2026-03-09 | M8 | Chat UI — fan-facing chat page, SSE streaming, ChatWindow/MessageBubble/ChatInput/StreamingCursor, post-review fixes (useCallback, stable keys, scroll fix, AbortError guard, React.cache, loading.tsx), 111/112 tests passing | triggered |
 | 2026-03-09 | M9 | Polish — hero landing page with CTAs, setup blank-flash fix, loading.tsx for /setup + /dashboard, PR review fixes (main landmark, focus rings, metadata), 115 tests | triggered |
+| 2026-03-10 | M10 | Dashboard overhaul — sidebar layout, DashboardShell, overview panel, bot creation modal, empty state, /setup redirect, 136 tests | triggered |
+| 2026-03-10 | M11 | Customize — welcome_message + persona + primary_color; PUT /api/bots/me with full validation; ChatWindow brand color + contrast; customize page + tests; 156 tests | triggered |
+| 2026-03-10 | M12 | Knowledge Base — DataSource model; GET/POST /api/data-sources; POST /api/data-sources/upload (PDF/CSV/TXT); DELETE /api/data-sources/[id]; chat system_context injection; Toast component; knowledge page; 225 tests | pending |
 
 ---
 
@@ -177,16 +180,16 @@
 - [x] `npm run lint && npm run type-check && npm run test` all exit 0
 
 ### M12 — Knowledge Base
-- [ ] FAQ tab: owner can add title + content entry
-- [ ] FAQ tab: entries listed with title, preview, delete button
-- [ ] Files tab: owner can upload PDF, CSV, or TXT (max 5MB)
-- [ ] Uploaded file text is extracted server-side and stored in DataSource
-- [ ] File list shows filename, size, "Ready" status, delete button
-- [ ] `GET /api/data-sources` returns all entries for owner
-- [ ] `DELETE /api/data-sources/[id]` removes entry (owner-scoped)
-- [ ] `/api/chat` injects all DataSource entries as `system_context` before proxying
-- [ ] Toast notifications for add/delete success and errors
-- [ ] `npm run lint && npm run type-check && npm run test` all exit 0
+- [x] FAQ tab: owner can add title + content entry
+- [x] FAQ tab: entries listed with title, preview, delete button
+- [x] Files tab: owner can upload PDF, CSV, or TXT (max 5MB)
+- [x] Uploaded file text is extracted server-side and stored in DataSource
+- [x] File list shows filename, size, "Ready" status, delete button
+- [x] `GET /api/data-sources` returns all entries for owner
+- [x] `DELETE /api/data-sources/[id]` removes entry (owner-scoped)
+- [x] `/api/chat` injects all DataSource entries as `system_context` before proxying
+- [x] Toast notifications for add/delete success and errors
+- [x] `npm run lint && npm run type-check && npm run test` all exit 0
 
 ### M13 — Settings + Embed Widget
 - [ ] Settings panel shows current sport + league with change selects

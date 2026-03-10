@@ -3,6 +3,7 @@ import mongoose from 'mongoose'
 import { MongoMemoryServer } from 'mongodb-memory-server'
 import { User } from '../User'
 import { Bot } from '../Bot'
+import { DataSource } from '../DataSource'
 
 let mongod: MongoMemoryServer
 
@@ -114,6 +115,83 @@ describe('Bot model', () => {
         sport: 'nba',
         league: 'nba',
         bot_endpoint_url: 'http://y',
+      })
+    ).rejects.toThrow()
+  })
+})
+
+describe('DataSource model', () => {
+  it('saves a valid FAQ entry', async () => {
+    const ds = await DataSource.create({
+      owner_id: 'owner-1',
+      bot_id: 'bot-1',
+      type: 'faq',
+      title: 'Test question',
+      content: 'Test answer',
+    })
+    expect(ds.owner_id).toBe('owner-1')
+    expect(ds.bot_id).toBe('bot-1')
+    expect(ds.type).toBe('faq')
+    expect(ds.title).toBe('Test question')
+    expect(ds.content).toBe('Test answer')
+    expect(ds.created_at).toBeInstanceOf(Date)
+    expect(ds.file_size).toBeUndefined()
+    expect(ds.original_filename).toBeUndefined()
+  })
+
+  it('saves a valid file entry with optional fields', async () => {
+    const ds = await DataSource.create({
+      owner_id: 'owner-1',
+      bot_id: 'bot-1',
+      type: 'file',
+      title: 'roster.csv',
+      content: 'name,score\nAlice,100',
+      file_size: 1024,
+      original_filename: 'roster.csv',
+    })
+    expect(ds.type).toBe('file')
+    expect(ds.file_size).toBe(1024)
+    expect(ds.original_filename).toBe('roster.csv')
+  })
+
+  it('requires owner_id', async () => {
+    await expect(
+      DataSource.create({ bot_id: 'b1', type: 'faq', title: 'T', content: 'C' })
+    ).rejects.toThrow()
+  })
+
+  it('requires bot_id', async () => {
+    await expect(
+      DataSource.create({ owner_id: 'o1', type: 'faq', title: 'T', content: 'C' })
+    ).rejects.toThrow()
+  })
+
+  it('requires title', async () => {
+    await expect(
+      DataSource.create({ owner_id: 'o1', bot_id: 'b1', type: 'faq', content: 'C' })
+    ).rejects.toThrow()
+  })
+
+  it('requires content', async () => {
+    await expect(
+      DataSource.create({ owner_id: 'o1', bot_id: 'b1', type: 'faq', title: 'T' })
+    ).rejects.toThrow()
+  })
+
+  it('rejects invalid type', async () => {
+    await expect(
+      DataSource.create({ owner_id: 'o1', bot_id: 'b1', type: 'invalid', title: 'T', content: 'C' })
+    ).rejects.toThrow()
+  })
+
+  it('enforces title maxlength of 200', async () => {
+    await expect(
+      DataSource.create({
+        owner_id: 'o1',
+        bot_id: 'b1',
+        type: 'faq',
+        title: 'x'.repeat(201),
+        content: 'C',
       })
     ).rejects.toThrow()
   })
