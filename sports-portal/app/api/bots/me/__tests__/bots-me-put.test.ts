@@ -1,0 +1,184 @@
+import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest'
+import type { MockedFunction } from 'vitest'
+import { MongoMemoryServer } from 'mongodb-memory-server'
+import mongoose from 'mongoose'
+
+vi.mock('@/lib/mongodb', () => ({ connectDB: vi.fn().mockResolvedValue(undefined) }))
+vi.mock('@/auth', () => ({ auth: vi.fn() }))
+
+import { PUT } from '../route'
+import { auth } from '@/auth'
+import { Bot } from '@/lib/models/Bot'
+
+const mockedAuth = auth as unknown as MockedFunction<() => Promise<unknown>>
+
+let mongod: MongoMemoryServer
+
+beforeAll(async () => {
+  mongod = await MongoMemoryServer.create()
+  await mongoose.connect(mongod.getUri())
+})
+
+afterEach(async () => {
+  await Promise.all(
+    Object.values(mongoose.connection.collections).map((c) => c.deleteMany({}))
+  )
+  vi.clearAllMocks()
+})
+
+afterAll(async () => {
+  await mongoose.disconnect()
+  await mongod.stop()
+})
+
+function mockSession(id: string) {
+  mockedAuth.mockResolvedValue({
+    user: { id, email: `${id}@example.com` },
+    expires: '9999-12-31T00:00:00.000Z',
+  })
+}
+
+function makeRequest(body: unknown) {
+  return new Request('http://localhost/api/bots/me', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+}
+
+describe('PUT /api/bots/me', () => {
+  it('returns 401 when no session', async () => {
+    mockedAuth.mockResolvedValue(null)
+    const res = await PUT(makeRequest({ bot_name: 'Bot' }))
+    expect(res.status).toBe(401)
+    const data = await res.json()
+    expect(data.error).toBe('Unauthorized')
+  })
+
+  it('returns 404 when owner has no bot', async () => {
+    mockSession('owner-put-1')
+    const res = await PUT(makeRequest({ bot_name: 'Bot' }))
+    expect(res.status).toBe(404)
+    const data = await res.json()
+    expect(data.error).toBe('No bot found')
+  })
+
+  it('returns 400 when bot_name is missing', async () => {
+    mockSession('owner-put-2')
+    const res = await PUT(makeRequest({ welcome_message: 'Hello' }))
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toMatch(/bot_name/)
+  })
+
+  it('returns 400 when bot_name is empty string', async () => {
+    mockSession('owner-put-3')
+    const res = await PUT(makeRequest({ bot_name: '   ' }))
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toMatch(/bot_name/)
+  })
+
+  it('returns 400 when bot_name exceeds 100 characters', async () => {
+    mockSession('owner-put-3b')
+    const res = await PUT(makeRequest({ bot_name: 'a'.repeat(101) }))
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toMatch(/bot_name/)
+  })
+
+  it('returns 400 for an invalid persona', async () => {
+    mockSession('owner-put-4')
+    await Bot.create({
+      owner_id: 'owner-put-4',
+      bot_name: 'Bot',
+      sport: 'soccer',
+      league: 'english-premier-league',
+      bot_endpoint_url: 'http://localhost:3001/chat',
+    })
+    const res = await PUT(makeRequest({ bot_name: 'Bot', persona: 'sarcastic' }))
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toMatch(/persona/)
+  })
+
+  it('returns 400 for an invalid hex color', async () => {
+    mockSession('owner-put-5')
+    await Bot.create({
+      owner_id: 'owner-put-5',
+      bot_name: 'Bot',
+      sport: 'soccer',
+      league: 'english-premier-league',
+      bot_endpoint_url: 'http://localhost:3001/chat',
+    })
+    const res = await PUT(makeRequest({ bot_name: 'Bot', primary_color: 'blue' }))
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toMatch(/primary_color/)
+  })
+
+  it('returns 400 when welcome_message exceeds 300 characters', async () => {
+    mockSession('owner-put-6')
+    await Bot.create({
+      owner_id: 'owner-put-6',
+      bot_name: 'Bot',
+      sport: 'soccer',
+      league: 'english-premier-league',
+      bot_endpoint_url: 'http://localhost:3001/chat',
+    })
+    const res = await PUT(makeRequest({ bot_name: 'Bot', welcome_message: 'a'.repeat(301) }))
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toMatch(/welcome_message/)
+  })
+
+  it('updates all fields and returns 200', async () => {
+    mockSession('owner-put-7')
+    await Bot.create({
+      owner_id: 'owner-put-7',
+      bot_name: 'Old Name',
+      sport: 'soccer',
+      league: 'english-premier-league',
+      bot_endpoint_url: 'http://localhost:3001/chat',
+    })
+    const res = await PUT(
+      makeRequest({
+        bot_name: 'New Name',
+        welcome_message: 'Welcome to the chat!',
+        persona: 'enthusiastic',
+        primary_color: '#FF5733',
+      })
+    )
+    expect(res.status).toBe(200)
+    const data = await res.json()
+    expect(data.bot_name).toBe('New Name')
+    expect(data.welcome_message).toBe('Welcome to the chat!')
+    expect(data.persona).toBe('enthusiastic')
+    expect(data.primary_color).toBe('#FF5733')
+  })
+
+  it('does not return bot_endpoint_url or owner_id', async () => {
+    mockSession('owner-put-8')
+    await Bot.create({
+      owner_id: 'owner-put-8',
+      bot_name: 'Bot',
+      sport: 'basketball',
+      league: 'nba',
+      bot_endpoint_url: 'http://localhost:3001/chat',
+    })
+    const res = await PUT(makeRequest({ bot_name: 'Updated Bot' }))
+    expect(res.status).toBe(200)
+    const data = await res.json()
+    expect(data.bot_endpoint_url).toBeUndefined()
+    expect(data.owner_id).toBeUndefined()
+  })
+
+  it('returns 500 on DB error', async () => {
+    mockSession('owner-put-9')
+    vi.spyOn(Bot, 'findOneAndUpdate').mockRejectedValueOnce(new Error('DB error'))
+    const res = await PUT(makeRequest({ bot_name: 'Bot' }))
+    expect(res.status).toBe(500)
+    const data = await res.json()
+    expect(data.error).toBe('Internal server error')
+  })
+})

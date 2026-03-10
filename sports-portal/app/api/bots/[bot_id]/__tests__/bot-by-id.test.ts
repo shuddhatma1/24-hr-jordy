@@ -62,6 +62,25 @@ describe('GET /api/bots/[bot_id]', () => {
     expect(data.bot_name).toBe('EPL Bot')
     expect(data.sport).toBe('soccer')
     expect(data.league).toBe('english-premier-league')
+    expect(data.welcome_message).toBeNull()
+    expect(data.primary_color).toBeNull()
+  })
+
+  it('returns welcome_message and primary_color when set', async () => {
+    const bot = await Bot.create({
+      owner_id: 'owner-5',
+      bot_name: 'NBA Bot',
+      sport: 'basketball',
+      league: 'nba',
+      bot_endpoint_url: 'http://localhost:3001/chat',
+      welcome_message: 'Welcome to the show!',
+      primary_color: '#FF5733',
+    })
+    const res = await GET(fakeReq, makeParams(bot._id.toString()))
+    expect(res.status).toBe(200)
+    const data = await res.json()
+    expect(data.welcome_message).toBe('Welcome to the show!')
+    expect(data.primary_color).toBe('#FF5733')
   })
 
   it('does not return bot_endpoint_url, owner_id, _id, or created_at', async () => {

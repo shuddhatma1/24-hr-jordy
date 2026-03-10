@@ -167,14 +167,14 @@
 - [x] `npm run lint && npm run type-check && npm run test` all exit 0
 
 ### M11 — Customize
-- [ ] Customize page pre-populates from `GET /api/bots/me`
-- [ ] Owner can update bot name, welcome message, persona, brand color
-- [ ] `PUT /api/bots/me` saves all fields; validates persona and hex color
-- [ ] "Changes saved" feedback on success; error message on failure
-- [ ] Fan chat page uses owner's welcome_message (fallback: default)
-- [ ] Fan chat page applies owner's primary_color to header (fallback: default blue)
-- [ ] `GET /api/bots/[bot_id]` returns welcome_message + primary_color
-- [ ] `npm run lint && npm run type-check && npm run test` all exit 0
+- [x] Customize page pre-populates from `GET /api/bots/me`
+- [x] Owner can update bot name, welcome message, persona, brand color
+- [x] `PUT /api/bots/me` saves all fields; validates persona and hex color
+- [x] "Changes saved" feedback on success; error message on failure
+- [x] Fan chat page uses owner's welcome_message (fallback: default)
+- [x] Fan chat page applies owner's primary_color to header (fallback: default blue)
+- [x] `GET /api/bots/[bot_id]` returns welcome_message + primary_color
+- [x] `npm run lint && npm run type-check && npm run test` all exit 0
 
 ### M12 — Knowledge Base
 - [ ] FAQ tab: owner can add title + content entry

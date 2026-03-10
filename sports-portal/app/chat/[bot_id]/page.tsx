@@ -11,9 +11,16 @@ export const dynamic = 'force-dynamic'
 
 interface PageProps {
   params: { bot_id: string }
+  searchParams?: { embed?: string }
 }
 
-type BotData = { bot_name: string; sport: string; league: string }
+type BotData = {
+  bot_name: string
+  sport: string
+  league: string
+  welcome_message?: string
+  primary_color?: string
+}
 
 /**
  * React.cache deduplicates this call within a single render tree so
@@ -23,7 +30,7 @@ type BotData = { bot_name: string; sport: string; league: string }
 const fetchBotData = cache(async (bot_id: string): Promise<BotData | null> => {
   await connectDB()
   return Bot.findById(bot_id)
-    .select('bot_name sport league')
+    .select('bot_name sport league welcome_message primary_color')
     .lean<BotData>()
 })
 
@@ -45,7 +52,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-export default async function ChatPage({ params }: PageProps) {
+export default async function ChatPage({ params, searchParams }: PageProps) {
   const { bot_id } = params
 
   if (!mongoose.Types.ObjectId.isValid(bot_id)) {
@@ -59,12 +66,16 @@ export default async function ChatPage({ params }: PageProps) {
     }
 
     const leagueLabel = getLeagueLabel(bot.sport, bot.league)
+    const isEmbed = searchParams?.embed === 'true'
 
     return (
       <ChatWindow
         botId={bot_id}
         botName={bot.bot_name}
         leagueLabel={leagueLabel}
+        welcomeMessage={bot.welcome_message}
+        primaryColor={bot.primary_color}
+        isEmbed={isEmbed}
       />
     )
   } catch {
