@@ -20,7 +20,11 @@ async function extractText(file: File, ext: string): Promise<string> {
   }
 
   if (ext === '.pdf') {
-    const pdfParse = (await import('pdf-parse')).default
+    // Use require for internal lib — pdf-parse/index.js has a debug mode
+    // that tries to read a test PDF file, which doesn't exist on Netlify.
+    // Importing the internal lib directly bypasses that debug code.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const pdfParse = require('pdf-parse/lib/pdf-parse') as (buf: Buffer) => Promise<{ text: string }>
     const result = await pdfParse(buffer)
     return result.text
   }
