@@ -22,12 +22,17 @@
   --accent-500: #a855f7;
   --accent-600: #9333ea;
   --accent-700: #7c3aed;
+
+  --scrollbar-thumb: #d6d3d1;
+  --scrollbar-thumb-hover: #a8a29e;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0c0a09;
     --foreground: #fafaf9;
+    --scrollbar-thumb: #44403c;
+    --scrollbar-thumb-hover: #57534e;
   }
 }
 
@@ -48,29 +53,33 @@ body {
   color: var(--brand-900);
 }
 
-/* Subtle custom scrollbar */
-::-webkit-scrollbar {
+/* Subtle custom scrollbar — scoped to html to avoid affecting selects/textareas */
+html::-webkit-scrollbar,
+html *::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
-::-webkit-scrollbar-track {
+html::-webkit-scrollbar-track,
+html *::-webkit-scrollbar-track {
   background: transparent;
 }
 
-::-webkit-scrollbar-thumb {
-  background: #d6d3d1;
+html::-webkit-scrollbar-thumb,
+html *::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb, #d6d3d1);
   border-radius: 9999px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #a8a29e;
+html::-webkit-scrollbar-thumb:hover,
+html *::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover, #a8a29e);
 }
 
 /* Firefox scrollbar */
-* {
+html {
   scrollbar-width: thin;
-  scrollbar-color: #d6d3d1 transparent;
+  scrollbar-color: var(--scrollbar-thumb, #d6d3d1) transparent;
 }
 
 @layer utilities {

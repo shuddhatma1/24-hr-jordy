@@ -6,11 +6,11 @@
 
 | Phase | Description | Status |
 |-------|-------------|--------|
-| 1 | Design System Foundation | not started |
+| 1 | Design System Foundation | done |
 | 2 | Landing Page Redesign | not started |
 | 3 | Dashboard / Portal Modernization | not started |
 | 4 | Chatbot UI Redesign | not started |
-| 5 | Mobile Chatbot Optimization | not started |
+| 5 | Mobile Chatbot Optimization | done |
 
 **Implementation order:** 1 → 5 → 4 → 2 → 3
 

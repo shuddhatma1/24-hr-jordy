@@ -52,7 +52,6 @@ export default function ChatWindow({
   const messagesRef = useRef<Message[]>(messages)
   const abortRef = useRef<AbortController | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
-  const chatContainerRef = useRef<HTMLDivElement>(null)
   // Track message count to distinguish "new message added" from "token appended"
   const prevLengthRef = useRef(messages.length)
 
@@ -228,15 +227,15 @@ export default function ChatWindow({
     <div
       className={`flex flex-col ${isEmbed ? 'h-full' : 'h-dvh'} bg-gray-50`}
       style={{
-        /* Fallback for browsers without dvh support */
-        minHeight: isEmbed ? undefined : '100vh',
+        /* Fallback for browsers without dvh support — h-dvh overrides when supported */
+        height: isEmbed ? undefined : '100vh',
         /* Prevent iOS bounce-scroll on the outer container */
         overscrollBehavior: 'none',
       }}
     >
       {/* Header — applies owner's brand color when set, falls back to white */}
       <header
-        className={`border-b px-4 py-3 flex-shrink-0 ${primaryColor ? '' : 'bg-white border-gray-200'}`}
+        className={`border-b px-4 py-2 md:py-3 flex-shrink-0 ${primaryColor ? '' : 'bg-white border-gray-200'}`}
         style={{
           ...(primaryColor
             ? { backgroundColor: primaryColor, borderColor: 'rgba(0,0,0,0.1)' }
@@ -255,15 +254,13 @@ export default function ChatWindow({
 
       {/* Message list */}
       <div
-        ref={chatContainerRef}
         role="log"
         aria-label="Chat messages"
         aria-live="polite"
-        className="flex-1 overflow-y-auto px-3 md:px-4 py-4 space-y-3"
+        className="flex-1 overflow-y-auto overflow-x-hidden px-3 md:px-4 py-4 space-y-2 md:space-y-3"
         style={{
           /* Prevent pull-to-refresh in chat view */
           overscrollBehavior: 'contain',
-          WebkitOverflowScrolling: 'touch',
         }}
       >
         {messages.map((msg) => (
