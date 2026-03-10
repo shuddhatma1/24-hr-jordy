@@ -6,12 +6,12 @@ import { SPORT_LABELS, LEAGUES_BY_SPORT, type Sport } from '@/lib/bot-registry'
 import CreateBotModal, { type BotData } from '@/components/dashboard/CreateBotModal'
 
 function getChatUrl(botId: string): string | null {
-  const base = process.env.NEXT_PUBLIC_APP_URL ?? ''
+  const base = (process.env.NEXT_PUBLIC_APP_URL ?? '').replace(/\/$/, '')
   return base ? `${base}/chat/${botId}` : null
 }
 
 function getEmbedCode(botId: string): string | null {
-  const base = process.env.NEXT_PUBLIC_APP_URL ?? ''
+  const base = (process.env.NEXT_PUBLIC_APP_URL ?? '').replace(/\/$/, '')
   return base ? `<script src="${base}/widget.js" data-bot-id="${botId}"></script>` : null
 }
 

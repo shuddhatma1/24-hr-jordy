@@ -37,7 +37,7 @@ export default function ChatWindow({
 }: Props) {
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: crypto.randomUUID(),
+      id: 'welcome',
       role: 'bot',
       content: welcomeMessage || `Hi! Ask me anything about the ${leagueLabel}.`,
     },
