@@ -1,10 +1,12 @@
-# PRD: Sports Chatbot Portal — Prototype
+# PRD: Sports Chatbot Portal
 
 ---
 
 ## 1. Overview
 
-A self-serve web portal where sports league operators and team owners configure and deploy an AI-powered stats chatbot in under 5 minutes — no engineering required. The owner picks their sport and league, gets a hosted URL to share with fans. The AI chatbot is pre-built and runs as an independent service — the portal is purely a configuration, routing, and UI layer on top of it.
+A self-serve portal where sports league operators and team owners create, configure, and deploy an AI-powered stats chatbot in under 5 minutes — no engineering required. The owner picks their sport and league, customizes their bot's personality and branding, adds team-specific knowledge, and gets both a hosted URL and an embeddable widget to share with fans.
+
+**This portal is an owner configuration tool.** The AI bot is pre-built and managed by a separate bot team — the portal's job is to collect owner inputs as cleanly and quickly as possible, store them, and route chat traffic to the correct bot endpoint. Fan experience and AI behaviour are out of scope for the portal team.
 
 ---
 
@@ -25,16 +27,17 @@ Sports leagues and teams want to offer fans instant access to stats without buil
 
 ---
 
-## 4. Non-Goals (Prototype Scope Boundary)
+## 4. Non-Goals (Scope Boundary)
 
-- No custom branding (colors, logo, bot avatar)
-- No analytics or query logging dashboard
-- No multiple bots per owner account
-- No custom stats data source configuration — bot instances are pre-assigned
+- No custom branding beyond color (no logo, no custom fonts, no bot avatar)
+- No analytics or query logging dashboard — analytics sidebar item is "Coming Soon" only (future module)
+- No multiple bots per owner account — one bot per owner
 - No billing or paid tiers
-- No embeddable `<script>` widget — hosted URL only
 - No team/multi-user accounts
 - No email verification — owners can use the product immediately after signup
+- No live/real-time score updates — bot handles stats from its own knowledge
+- No actual AI processing in the portal — bot is pre-built and external; portal proxies to it
+- How the bot consumes owner knowledge (system_context format, AI processing) — entirely the bot team's responsibility; portal only stores and forwards
 
 ---
 
@@ -61,10 +64,16 @@ Sports leagues and teams want to offer fans instant access to stats without buil
 3. As a league operator, I want to receive a hosted URL after setup so I can share it with fans immediately.
 4. As a league operator, I want to preview my chatbot before sharing it so I can verify it works.
 5. As a league operator, I want to copy my chatbot URL from the dashboard with one click.
+6. As a league operator, I want to customize the welcome message so fans get a greeting relevant to my club.
+7. As a league operator, I want to set a brand color so my chatbot feels on-brand for my club or league.
+8. As a league operator, I want to add FAQ entries so my bot can answer club-specific questions.
+9. As a league operator, I want to upload a player roster or fixture CSV so my bot knows our team data.
+10. As a league operator, I want an embed code so I can put the chatbot on my existing website.
 
 **Fan flows:**
-6. As a fan, I want to type a question and get a streamed, natural-language answer so the experience feels fast and conversational.
-7. As a fan, I want the chatbot to tell me when it doesn't know something so I'm not misled.
+11. As a fan, I want to type a question and get a streamed, natural-language answer so the experience feels fast and conversational.
+12. As a fan, I want the chatbot to answer club-specific questions (captain, fixtures, rules) that the owner has configured.
+13. As a fan, I want to chat via a widget on the club's website without navigating away.
 
 ---
 
@@ -73,31 +82,58 @@ Sports leagues and teams want to offer fans instant access to stats without buil
 **Auth**
 1. Must — Owner can sign up with email + password
 2. Must — Owner can log in and session persists across page refreshes
-3. Must — Unauthenticated access to `/dashboard` or `/setup` redirects to `/login`
+3. Must — Unauthenticated access to `/dashboard` or sub-pages redirects to `/login`
 
-**Chatbot Configuration Wizard**
-4. Must — 3-step wizard: (1) name your bot, (2) pick sport, (3) pick league
+**Bot Creation (modal within dashboard)**
+4. Must — 3-step modal: (1) name your bot, (2) pick sport, (3) pick league
 5. Must — Sport options: Soccer, Basketball, NFL, Baseball
-6. Must — League options populated per sport from the bot registry (hardcoded for prototype)
+6. Must — League options populated per sport from the bot registry
 7. Must — On completion, a `bot_id` (MongoDB ObjectId) is generated and stored
-8. Must — Owner is shown their hosted chatbot URL: `yourapp.com/chat/{bot_id}`
-9. Must — Selecting an unsupported league shows a clear error: "This league isn't available yet"
-10. Must — Re-submitting wizard when a bot already exists returns an error (1 bot per owner)
+8. Must — Selecting an unsupported league shows a clear error: "This league isn't available yet"
+9. Must — Re-submitting when a bot already exists returns an error (1 bot per owner)
 
-**Owner Dashboard**
-11. Must — After login, owner sees bot name, sport, league, and hosted URL
-12. Must — Copy button copies URL to clipboard and shows "Copied!" confirmation
-13. Must — "Preview Chatbot" opens `/chat/{bot_id}` in a new tab
+**Dashboard — Overview**
+10. Must — Sidebar navigation with 4 sections: Overview, Customize, Knowledge, Settings
+11. Must — Overview shows bot name, sport, league, creation date
+12. Must — Shareable link with copy button ("Copied!" 2s feedback) and preview button
+13. Must — Embed widget code snippet with copy button
 14. Must — Log out button ends session
+15. Must — Empty state with "Create chatbot" CTA when owner has no bot
 
-**Hosted Chat Page (Fan-facing)**
-15. Must — Page loads bot name from DB by `bot_id` — no login required
-16. Must — Shows welcome message: "Hi! Ask me anything about {league}."
-17. Must — User message sent to `/api/chat`, response streamed token by token
-18. Must — Chat history persists in-memory for the session (not across sessions)
-19. Must — Send button disabled and input locked while bot is streaming
-20. Must — Invalid `bot_id` shows: "This chatbot doesn't exist or has been removed"
-21. Should — Streaming cursor (`▌`) shown on last bot message while response is arriving
+**Dashboard — Customize**
+16. Must — Owner can update bot name (1–100 chars)
+17. Must — Owner can set a welcome message (max 300 chars) — shown to fans as the first chat message
+18. Must — Owner can set persona/tone: Friendly, Professional, Enthusiastic
+19. Must — Owner can set a primary brand color (hex) — applied to chatbot header
+20. Must — All changes save via one "Save" button and apply immediately to the fan chat page
+
+**Dashboard — Knowledge**
+21. Must — FAQ tab: owner can add text entries (title + content), view list, delete entries
+22. Must — Files tab: owner can upload PDF, CSV, or TXT files (max 5MB each)
+23. Must — Uploaded file text is extracted server-side and stored — no binary storage
+24. Must — All knowledge entries (FAQ + files) are injected as context into every chat conversation
+25. Must — File list shows filename, size, status ("Ready"); delete button per file
+
+**Dashboard — Settings**
+26. Must — Owner can change sport/league; bot endpoint URL updates automatically
+27. Must — Owner can delete their bot (with confirmation); all knowledge entries cascade-deleted
+
+**Fan Chat Page**
+28. Must — Page loads by `bot_id` — no login required
+29. Must — Shows owner's custom welcome message (fallback: "Hi! Ask me anything about {league}.")
+30. Must — Header uses owner's brand color (fallback: default blue)
+31. Must — User message sent to `/api/chat`, response streamed token by token
+32. Must — Chat history persists in-memory for the session
+33. Must — Send disabled while streaming; streaming cursor (`▌`) shown
+34. Must — Invalid `bot_id` shows: "This chatbot doesn't exist or has been removed"
+35. Must — Supports `?embed=true` mode: compact layout for iframe embedding
+
+**Embed Widget**
+36. Must — `public/widget.js` is a self-contained script with no dependencies
+37. Must — Script reads `data-bot-id` attribute from the `<script>` tag
+38. Must — Injects a floating chat button (bottom-right) on the host page
+39. Must — Clicking button opens a floating iframe panel with the chatbot
+40. Must — Works on any website that can load a `<script>` tag
 
 ---
 
@@ -112,43 +148,64 @@ Sports leagues and teams want to offer fans instant access to stats without buil
 
 ## 9. Design & UX Notes
 
-**Owner wizard flow:**
+**Bot creation flow (modal):**
 ```
 [Step 1]              [Step 2]           [Step 3]
-Name your bot    →    Pick sport    →    Pick league    →    [Bot is live!]
-"City FC Bot"         Soccer             Premier League       yourapp.com/chat/abc123
+Name your bot    →    Pick sport    →    Pick league    →    [Dashboard]
+"City FC Bot"         Soccer             Premier League
 ```
 
-**Owner dashboard:**
+**Dashboard layout:**
 ```
-┌─────────────────────────────────────────────────┐
-│  Welcome back, [email]              [Log out]   │
-├─────────────────────────────────────────────────┤
-│  Your Chatbot                                   │
-│    Name:    City FC Bot                         │
-│    Sport:   Soccer                              │
-│    League:  English Premier League              │
-│                                                 │
-│  Your URL:                                      │
-│  [ yourapp.com/chat/abc-123 ]  [Copy URL]       │
-│                                                 │
-│              [Preview Chatbot ↗]                │
-└─────────────────────────────────────────────────┘
+┌──────────┬──────────────────────────────────────────┐
+│  ⚡ Bot   │  City FC Bot                             │
+│          │  Soccer · English Premier League         │
+│ Overview │                                          │
+│ Customize│  ┌──────────────────┐ ┌────────────────┐ │
+│ Knowledge│  │ Shareable Link   │ │ Embed Widget   │ │
+│ Settings │  │ [url...]  [Copy] │ │ [<script>][Copy│ │
+│          │  │ [Preview ↗]      │ │ Paste on site  │ │
+│──────────│  └──────────────────┘ └────────────────┘ │
+│ user@... │                                          │
+│ Log out  │  [Customize →]  [Add Knowledge →]        │
+└──────────┴──────────────────────────────────────────┘
+```
+
+**Customize panel:**
+```
+Bot name:        [City FC Bot              ]
+Welcome message: [Welcome! Ask me anything...]  (300 char max)
+Persona:         [Friendly ▼]
+Brand color:     [●] [#3B82F6]  ← synced color picker + hex input
+                 [Save changes]
+```
+
+**Knowledge panel:**
+```
+[FAQ / Text]  [Files]
+─────────────────────────────────
+Title:   [Who is the captain?      ]
+Content: [Marcus Rashford since... ]
+         [Add entry]
+
+─────────────────────────────────
+• Who is the captain?              [Delete]
+  Marcus Rashford has been...
+• Home game times                  [Delete]
+  Home games at 7:30 PM...
 ```
 
 **Fan chat page:**
 ```
 ┌─────────────────────────────────────┐
-│  City FC Bot                        │
+│  City FC Bot              [■ #3B82F6 header color]
 ├─────────────────────────────────────┤
-│  Bot: Hi! Ask me anything about     │
-│  the English Premier League.        │
+│  Bot: Welcome! Ask me anything      │
+│  about City FC.                     │
 │                                     │
-│                    You: Who top     │
-│                    scored last      │
-│                    season?          │
+│              You: Who is captain?   │
 │                                     │
-│  Bot: ▌ (streaming...)              │
+│  Bot: Marcus Rashford has been ▌    │
 ├─────────────────────────────────────┤
 │  [Type a question...      ] [Send]  │
 └─────────────────────────────────────┘
@@ -189,9 +246,15 @@ MOCK_BOT_URL=http://localhost:3001/chat # replaced with real bot URLs in product
 | POST | `/api/auth/signup` | None | Create owner account |
 | POST | `/api/auth/[...nextauth]` | — | NextAuth signin/signout/session |
 | POST | `/api/bots` | Session | Create bot config for owner |
-| GET | `/api/bots/me` | Session | Get owner's bot (for dashboard) |
-| GET | `/api/bots/[bot_id]` | None | Get bot info (for chat page) |
-| POST | `/api/chat` | None | Proxy message to bot, stream response |
+| GET | `/api/bots/me` | Session | Get owner's bot (dashboard) |
+| PUT | `/api/bots/me` | Session | Update bot settings (name, welcome msg, persona, color, sport/league) |
+| DELETE | `/api/bots/me` | Session | Delete bot + cascade data sources |
+| GET | `/api/bots/[bot_id]` | None | Bot info including welcome_message + primary_color (fan chat page) |
+| POST | `/api/chat` | None | Proxy message to bot with data source context, stream response |
+| GET | `/api/data-sources` | Session | List owner's knowledge entries |
+| POST | `/api/data-sources` | Session | Create FAQ text entry |
+| POST | `/api/data-sources/upload` | Session | Upload + parse PDF/CSV/TXT file |
+| DELETE | `/api/data-sources/[id]` | Session | Delete knowledge entry |
 
 ---
 
@@ -201,7 +264,7 @@ Built module by module. Each module is developed, reviewed, tested, committed, a
 
 | Module | What ships |
 |---|---|
-| M1 — Project Setup | Next.js app + mock bot + GitHub repo + Vercel live URL |
+| M1 — Project Setup | Next.js app + mock bot + GitHub repo + Netlify live URL |
 | M2 — MongoDB + Models | DB connection + User + Bot schemas |
 | M3 — Auth | Signup, login, session, route protection |
 | M4 — Bot Registry | Sport/league → endpoint mapping |
@@ -210,6 +273,11 @@ Built module by module. Each module is developed, reviewed, tested, committed, a
 | M7 — Chat Proxy API | `POST /api/chat` streaming proxy |
 | M8 — Chat UI | Fan-facing chat page with streaming |
 | M9 — Polish | Error states, mobile, loading, landing page |
+| **M10 — Dashboard Overhaul** | **Sidebar layout, Overview panel, bot creation modal** |
+| **M11 — Customize** | **Welcome message, persona, brand color — wired to fan chat** |
+| **M12 — Knowledge Base** | **FAQ entries + file upload (PDF/CSV/TXT), injected into chat** |
+| **M13 — Settings + Embed Widget** | **Change league, delete bot, `widget.js` embed script** |
+| **M14 — Landing Page** | **Full landing page with hero, how-it-works, feature highlights** |
 
 **Per-module workflow:** Develop → Code review (`/simplify`) → Test locally → Commit to feature branch → Push → Merge to `main` → Vercel auto-deploys → Verify on production.
 
@@ -226,12 +294,11 @@ Built module by module. Each module is developed, reviewed, tested, committed, a
 
 ## 14. Out of Scope / Future Work
 
-- Custom branding per chatbot (colors, logo)
-- `<script>` embed widget for third-party sites
+- Custom branding beyond color (logo, fonts, bot avatar)
 - Multiple chatbots per owner
 - Usage analytics and query logs
-- Custom stats data source (CSV upload, custom API)
 - Live match / real-time score updates
-- Bot personality selection
 - Paid tiers and billing
 - Email verification on signup
+- Team/multi-user accounts
+- Embeddable widget with custom styling options

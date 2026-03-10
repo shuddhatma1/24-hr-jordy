@@ -2,14 +2,16 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { signOut } from 'next-auth/react'
-import { SPORT_LABELS, LEAGUES_BY_SPORT, Sport } from '@/lib/bot-registry'
+import { SPORT_LABELS, LEAGUES_BY_SPORT, type Sport } from '@/lib/bot-registry'
+import CreateBotModal, { type BotData } from '@/components/dashboard/CreateBotModal'
 
-interface BotData {
-  bot_id: string
-  bot_name: string
-  sport: string
-  league: string
+function getChatUrl(botId: string): string {
+  return `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/chat/${botId}`
+}
+
+function getEmbedCode(botId: string): string {
+  const base = process.env.NEXT_PUBLIC_APP_URL ?? ''
+  return `<script src="${base}/widget.js" data-bot-id="${botId}"></script>`
 }
 
 function getLeagueLabel(sport: string, league: string): string {
@@ -17,17 +19,23 @@ function getLeagueLabel(sport: string, league: string): string {
   return leagues.find((l) => l.value === league)?.label ?? league
 }
 
-function getChatUrl(botId: string): string {
-  return `${process.env.NEXT_PUBLIC_APP_URL}/chat/${botId}`
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
 }
 
 export default function DashboardPage() {
   const router = useRouter()
+  const [status, setStatus] = useState<'loading' | 'empty' | 'loaded' | 'error'>('loading')
   const [bot, setBot] = useState<BotData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [copied, setCopied] = useState(false)
-  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [copiedLink, setCopiedLink] = useState(false)
+  const [copiedEmbed, setCopiedEmbed] = useState(false)
+  const linkTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const embedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -38,125 +46,171 @@ export default function DashboardPage() {
           return
         }
         if (res.status === 404) {
-          router.push('/setup')
+          setStatus('empty')
           return
         }
         if (!res.ok) {
-          setError('Failed to load bot data. Please refresh.')
-          setLoading(false)
+          setStatus('error')
           return
         }
         const data = await res.json() as BotData
         setBot(data)
-        setLoading(false)
+        setStatus('loaded')
       })
       .catch((err: unknown) => {
         if ((err as { name?: string }).name === 'AbortError') return
-        setError('Network error. Please refresh.')
-        setLoading(false)
+        setStatus('error')
       })
     return () => controller.abort()
   }, [router])
 
   useEffect(() => {
     return () => {
-      if (copyTimer.current) clearTimeout(copyTimer.current)
+      if (linkTimer.current) clearTimeout(linkTimer.current)
+      if (embedTimer.current) clearTimeout(embedTimer.current)
     }
   }, [])
 
-  async function handleCopyUrl() {
+  async function handleCopyLink() {
     if (!bot) return
     try {
       await navigator.clipboard.writeText(getChatUrl(bot.bot_id))
-      if (copyTimer.current) clearTimeout(copyTimer.current)
-      setCopied(true)
-      copyTimer.current = setTimeout(() => setCopied(false), 2000)
+      if (linkTimer.current) clearTimeout(linkTimer.current)
+      setCopiedLink(true)
+      linkTimer.current = setTimeout(() => setCopiedLink(false), 2000)
     } catch {
-      setError('Could not copy to clipboard.')
+      // clipboard not available (e.g. non-https)
     }
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <p className="text-sm text-gray-500">Loading...</p>
-      </div>
-    )
+  async function handleCopyEmbed() {
+    if (!bot) return
+    try {
+      await navigator.clipboard.writeText(getEmbedCode(bot.bot_id))
+      if (embedTimer.current) clearTimeout(embedTimer.current)
+      setCopiedEmbed(true)
+      embedTimer.current = setTimeout(() => setCopiedEmbed(false), 2000)
+    } catch {
+      // clipboard not available
+    }
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <p className="text-sm text-red-600">{error}</p>
-      </div>
-    )
+  function handleBotCreated(newBot: BotData) {
+    setBot(newBot)
+    setStatus('loaded')
+    setModalOpen(false)
   }
 
-  if (!bot) return null
-
-  const chatUrl = getChatUrl(bot.bot_id)
+  const copyBtnClass =
+    'px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+    <>
+      <div className="p-6 md:p-8 max-w-2xl">
+        <h1 className="text-xl font-semibold text-gray-900 mb-6">Overview</h1>
 
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-lg font-semibold text-gray-900">Sports Chatbot Portal</h1>
-          <button
-            onClick={() => void signOut({ callbackUrl: '/login' })}
-            className="text-sm text-gray-500 hover:text-gray-700"
-          >
-            Log out
-          </button>
-        </div>
+        {status === 'loading' && (
+          <p className="text-sm text-gray-500">Loading...</p>
+        )}
 
-        {/* Bot details */}
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Chatbot</h2>
-          <dl className="space-y-2">
-            <div className="flex justify-between">
-              <dt className="text-sm font-medium text-gray-500">Name</dt>
-              <dd className="text-sm text-gray-900">{bot.bot_name}</dd>
-            </div>
-            <div className="flex justify-between">
-              <dt className="text-sm font-medium text-gray-500">Sport</dt>
-              <dd className="text-sm text-gray-900">{SPORT_LABELS[bot.sport as Sport] ?? bot.sport}</dd>
-            </div>
-            <div className="flex justify-between">
-              <dt className="text-sm font-medium text-gray-500">League</dt>
-              <dd className="text-sm text-gray-900">{getLeagueLabel(bot.sport, bot.league)}</dd>
-            </div>
-          </dl>
-        </div>
+        {status === 'error' && (
+          <p className="text-sm text-red-600">Failed to load. Please refresh.</p>
+        )}
 
-        {/* URL section */}
-        <div className="mb-6">
-          <p className="text-sm font-medium text-gray-700 mb-2">Your chatbot URL</p>
-          <div className="flex gap-2">
-            <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 font-mono truncate">
-              {chatUrl}
-            </div>
-            <button
-              onClick={() => void handleCopyUrl()}
-              className="py-2 px-4 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 whitespace-nowrap"
+        {status === 'empty' && (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <svg
+              className="w-12 h-12 text-gray-300"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.5}
+              viewBox="0 0 24 24"
+              aria-hidden="true"
             >
-              {copied ? 'Copied!' : 'Copy URL'}
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M8.625 9.75a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 0 1 .778-.332 48.294 48.294 0 0 0 5.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"
+              />
+            </svg>
+            <h2 className="mt-4 text-lg font-semibold text-gray-900">No chatbot yet</h2>
+            <p className="mt-1 text-sm text-gray-500">Create your chatbot in 3 quick steps.</p>
+            <button
+              onClick={() => setModalOpen(true)}
+              className="mt-6 px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              Create your chatbot
             </button>
           </div>
-        </div>
+        )}
 
-        {/* Preview link */}
-        <a
-          href={chatUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block w-full py-2 px-4 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 text-center"
-        >
-          Preview Chatbot ↗
-        </a>
+        {status === 'loaded' && bot && (
+          <div className="space-y-4">
+            {/* Bot info card */}
+            <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <h2 className="text-sm font-medium text-gray-500 mb-3">Your chatbot</h2>
+              <dl className="space-y-2">
+                {[
+                  { label: 'Name', value: bot.bot_name },
+                  { label: 'Sport', value: SPORT_LABELS[bot.sport as Sport] ?? bot.sport },
+                  { label: 'League', value: getLeagueLabel(bot.sport, bot.league) },
+                  { label: 'Created', value: formatDate(bot.created_at) },
+                ].map(({ label, value }) => (
+                  <div key={label} className="flex justify-between">
+                    <dt className="text-sm font-medium text-gray-500">{label}</dt>
+                    <dd className="text-sm text-gray-900">{value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
 
+            {/* Shareable link card */}
+            <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <h2 className="text-sm font-medium text-gray-500 mb-1">Shareable link</h2>
+              <p className="text-xs text-gray-400 mb-3">Share with fans to give them direct access.</p>
+              <div className="flex gap-2">
+                <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 font-mono truncate">
+                  {getChatUrl(bot.bot_id)}
+                </div>
+                <button onClick={() => void handleCopyLink()} className={copyBtnClass}>
+                  {copiedLink ? 'Copied!' : 'Copy'}
+                </button>
+              </div>
+              <a
+                href={getChatUrl(bot.bot_id)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-block text-sm text-blue-600 hover:underline"
+              >
+                Preview chatbot ↗
+              </a>
+            </div>
+
+            {/* Embed widget card */}
+            <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <h2 className="text-sm font-medium text-gray-500 mb-1">Embed on your website</h2>
+              <p className="text-xs text-gray-400 mb-3">
+                Paste this script tag before{' '}
+                <code className="font-mono">&lt;/body&gt;</code> on your site.
+              </p>
+              <div className="flex gap-2 items-start">
+                <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 font-mono break-all">
+                  {getEmbedCode(bot.bot_id)}
+                </div>
+                <button onClick={() => void handleCopyEmbed()} className={copyBtnClass}>
+                  {copiedEmbed ? 'Copied!' : 'Copy'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
+
+      <CreateBotModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSuccess={handleBotCreated}
+      />
+    </>
   )
 }

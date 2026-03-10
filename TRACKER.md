@@ -27,6 +27,12 @@
 | M7 | Chat Proxy API | done | `feat/m7-chat-api` | Yes | PR #8 merged |
 | M8 | Chat UI | done | `feat/m8-chat-ui` | Yes | PR #9 merged 2026-03-09 |
 | M9 | Polish | done | `feat/m9-polish` | Yes | PR #10 merged 2026-03-09 |
+| M10 | Dashboard Overhaul | done | `feat/m10-dashboard` | No | Sidebar, Overview panel, bot creation modal |
+| M11 | Customize | not started | `feat/m11-customize` | No | Welcome msg, persona, brand color — wired to fan chat |
+| M12 | Knowledge Base | not started | `feat/m12-knowledge` | No | FAQ + file upload (PDF/CSV/TXT); portal stores inputs — bot team handles consumption |
+| M13 | Settings + Embed Widget | not started | `feat/m13-settings-embed` | No | Change league, delete bot, widget.js |
+| M14 | Landing Page | not started | `feat/m14-landing` | No | Hero, how-it-works, feature highlights |
+| M15 | Analytics Dashboard | not started | `feat/m15-analytics` | No | Owner usage analytics — sidebar "Coming Soon" item added in M10 |
 
 ---
 
@@ -144,8 +150,66 @@
 
 ---
 
+---
+
+### M10 — Dashboard Overhaul
+- [x] Sidebar navigation visible and functional on all `/dashboard/*` routes
+- [x] Active nav item highlighted based on current route
+- [x] Sidebar collapses to hamburger menu on mobile
+- [x] Analytics sidebar item visible as "Coming Soon" (non-clickable, badged)
+- [x] Overview panel shows bot name, sport, league, creation date
+- [x] Shareable link card: URL + copy button + preview button
+- [x] Embed widget card: `<script>` snippet + copy code button
+- [x] Empty state shown when owner has no bot (no redirect to /setup)
+- [x] "Create chatbot" button opens modal with 3-step flow
+- [x] Modal closes and overview updates on successful bot creation
+- [x] `/setup` redirects to `/dashboard`
+- [x] `npm run lint && npm run type-check && npm run test` all exit 0
+
+### M11 — Customize
+- [ ] Customize page pre-populates from `GET /api/bots/me`
+- [ ] Owner can update bot name, welcome message, persona, brand color
+- [ ] `PUT /api/bots/me` saves all fields; validates persona and hex color
+- [ ] "Changes saved" feedback on success; error message on failure
+- [ ] Fan chat page uses owner's welcome_message (fallback: default)
+- [ ] Fan chat page applies owner's primary_color to header (fallback: default blue)
+- [ ] `GET /api/bots/[bot_id]` returns welcome_message + primary_color
+- [ ] `npm run lint && npm run type-check && npm run test` all exit 0
+
+### M12 — Knowledge Base
+- [ ] FAQ tab: owner can add title + content entry
+- [ ] FAQ tab: entries listed with title, preview, delete button
+- [ ] Files tab: owner can upload PDF, CSV, or TXT (max 5MB)
+- [ ] Uploaded file text is extracted server-side and stored in DataSource
+- [ ] File list shows filename, size, "Ready" status, delete button
+- [ ] `GET /api/data-sources` returns all entries for owner
+- [ ] `DELETE /api/data-sources/[id]` removes entry (owner-scoped)
+- [ ] `/api/chat` injects all DataSource entries as `system_context` before proxying
+- [ ] Toast notifications for add/delete success and errors
+- [ ] `npm run lint && npm run type-check && npm run test` all exit 0
+
+### M13 — Settings + Embed Widget
+- [ ] Settings panel shows current sport + league with change selects
+- [ ] Saving new sport/league calls `PUT /api/bots/me` and re-resolves endpoint URL
+- [ ] Danger zone: "Delete bot" shows inline confirmation before proceeding
+- [ ] `DELETE /api/bots/me` deletes bot + all DataSources; redirects to empty dashboard
+- [ ] `public/widget.js` loads on any page with `data-bot-id` attribute
+- [ ] Widget script injects floating button bottom-right
+- [ ] Clicking button opens iframe panel pointing to `/chat/[id]?embed=true`
+- [ ] Chat page supports `?embed=true`: compact layout, no full-page chrome
+- [ ] `npm run lint && npm run type-check && npm run test` all exit 0
+
+### M14 — Landing Page
+- [ ] Hero section: headline, subtext, two CTAs (Get started free / Log in)
+- [ ] How it works: 3-step explanation
+- [ ] Feature highlights: 3 cards (instant answers, custom knowledge, embed anywhere)
+- [ ] Mobile-responsive at 375px width
+- [ ] `npm run lint && npm run type-check && npm run test` all exit 0
+
+---
+
 ## Open Issues / Blockers
 | # | Issue | Module | Status |
 |---|---|---|---|
-| 1 | Real bot endpoint URL format unknown | M7 | open |
-| 2 | Mock bot not publicly reachable in production | M7 | open |
+| 1 | Real bot endpoint URL format unknown | M7 | open — mock used in dev |
+| 2 | Mock bot not publicly reachable in production | M7 | known limitation — real bot needed for production demo |
