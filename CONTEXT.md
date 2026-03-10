@@ -133,7 +133,8 @@ sports-portal/
 │   │   ├── page.tsx                # [M10] Rewrite — Overview panel (share link + embed code)
 │   │   ├── loading.tsx
 │   │   ├── customize/
-│   │   │   └── page.tsx            # [M11 NEW] Customize panel — name, welcome msg, persona, color
+│   │   │   ├── page.tsx            # [M11 NEW] Customize panel — name, welcome msg, persona, color
+│   │   │   └── __tests__/customize-page.test.tsx  # [M11 NEW] 8 tests — load, 404, 500, save/error, persona
 │   │   ├── data-sources/
 │   │   │   └── page.tsx            # [M12 NEW] Knowledge panel — FAQ + file upload
 │   │   └── settings/

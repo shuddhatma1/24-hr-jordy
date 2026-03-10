@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import mongoose from 'mongoose'
 import { connectDB } from '@/lib/mongodb'
 import { Bot } from '@/lib/models/Bot'
+import { DataSource } from '@/lib/models/DataSource'
 
 const MAX_BODY_BYTES = 50 * 1024
 
@@ -47,13 +48,25 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Bot not found' }, { status: 404 })
     }
 
+    let system_context = ''
+    try {
+      const dataSources = await DataSource.find({ bot_id: bot._id.toString() })
+      if (dataSources.length > 0) {
+        system_context = dataSources
+          .map((ds) => `${ds.title}:\n${ds.content}`)
+          .join('\n\n---\n\n')
+      }
+    } catch {
+      // Non-fatal — continue without context
+    }
+
     let botRes: globalThis.Response
     try {
       // TODO: add AbortController timeout before production
       botRes = await fetch(bot.bot_endpoint_url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages }),
+        body: JSON.stringify({ messages, system_context }),
       })
     } catch {
       return NextResponse.json({ error: 'Bot endpoint unreachable' }, { status: 502 })
