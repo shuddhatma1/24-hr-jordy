@@ -86,7 +86,7 @@ A self-serve portal where sports league owners sign up, configure an AI stats ch
 | M7 — Chat Proxy API | done | `feat/m7-chat-api` | #8 |
 | M8 — Chat UI | done | `feat/m8-chat-ui` | #9 merged 2026-03-09 |
 | M9 — Polish | done | `feat/m9-polish` | #10 merged 2026-03-09 |
-| M10 — Dashboard Overhaul | not started | `feat/m10-dashboard` | — |
+| M10 — Dashboard Overhaul | done | `feat/m10-dashboard` | #11 merged 2026-03-10 |
 | M11 — Customize | not started | `feat/m11-customize` | — |
 | M12 — Knowledge Base | not started | `feat/m12-knowledge` | — |
 | M13 — Settings + Embed Widget | not started | `feat/m13-settings-embed` | — |

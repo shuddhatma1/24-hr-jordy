@@ -27,7 +27,7 @@
 | M7 | Chat Proxy API | done | `feat/m7-chat-api` | Yes | PR #8 merged |
 | M8 | Chat UI | done | `feat/m8-chat-ui` | Yes | PR #9 merged 2026-03-09 |
 | M9 | Polish | done | `feat/m9-polish` | Yes | PR #10 merged 2026-03-09 |
-| M10 | Dashboard Overhaul | done | `feat/m10-dashboard` | No | Sidebar, Overview panel, bot creation modal |
+| M10 | Dashboard Overhaul | done | `feat/m10-dashboard` | Yes | PR #11 merged 2026-03-10 |
 | M11 | Customize | not started | `feat/m11-customize` | No | Welcome msg, persona, brand color — wired to fan chat |
 | M12 | Knowledge Base | not started | `feat/m12-knowledge` | No | FAQ + file upload (PDF/CSV/TXT); portal stores inputs — bot team handles consumption |
 | M13 | Settings + Embed Widget | not started | `feat/m13-settings-embed` | No | Change league, delete bot, widget.js |
