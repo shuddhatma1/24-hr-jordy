@@ -261,4 +261,30 @@ describe('PUT /api/bots/me', () => {
     expect(dbBot?.sport).toBe('soccer')
     expect(dbBot?.league).toBe('english-premier-league')
   })
+
+  it('does not wipe customization when only sport/league are sent', async () => {
+    mockSession('owner-put-sl-7')
+    await Bot.create({
+      owner_id: 'owner-put-sl-7',
+      bot_name: 'Bot',
+      sport: 'soccer',
+      league: 'english-premier-league',
+      bot_endpoint_url: 'http://localhost:3001/chat',
+      welcome_message: 'Hello fans!',
+      persona: 'enthusiastic',
+      primary_color: '#FF5733',
+    })
+    // Settings page sends bot_name + sport + league but NOT welcome_message/persona/primary_color
+    const res = await PUT(
+      makeRequest({ bot_name: 'Bot', sport: 'basketball', league: 'nba' })
+    )
+    expect(res.status).toBe(200)
+    const data = await res.json()
+    expect(data.sport).toBe('basketball')
+    expect(data.league).toBe('nba')
+    // Customization fields must be preserved
+    expect(data.welcome_message).toBe('Hello fans!')
+    expect(data.persona).toBe('enthusiastic')
+    expect(data.primary_color).toBe('#FF5733')
+  })
 })

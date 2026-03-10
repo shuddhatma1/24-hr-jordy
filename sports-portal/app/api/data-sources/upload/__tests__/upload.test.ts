@@ -5,7 +5,7 @@ import mongoose from 'mongoose'
 
 vi.mock('@/lib/mongodb', () => ({ connectDB: vi.fn().mockResolvedValue(undefined) }))
 vi.mock('@/auth', () => ({ auth: vi.fn() }))
-vi.mock('pdf-parse', () => ({
+vi.mock('pdf-parse/lib/pdf-parse', () => ({
   default: vi.fn().mockResolvedValue({ text: 'Extracted PDF text content' }),
 }))
 
@@ -13,7 +13,9 @@ import { POST } from '../route'
 import { auth } from '@/auth'
 import { Bot } from '@/lib/models/Bot'
 import { DataSource } from '@/lib/models/DataSource'
-import pdfParse from 'pdf-parse'
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error — no type declarations for internal pdf-parse module
+import pdfParse from 'pdf-parse/lib/pdf-parse'
 
 const mockedAuth = auth as unknown as MockedFunction<() => Promise<unknown>>
 

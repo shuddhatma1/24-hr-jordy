@@ -113,10 +113,16 @@ export async function PUT(request: Request) {
   try {
     await connectDB()
     const $set: Record<string, unknown> = {
-      bot_name: bot_name.trim(),
-      welcome_message: (welcome_message as string | null | undefined) || null,
-      persona: (persona as string | null | undefined) || null,
-      primary_color: (primary_color as string | null | undefined) || null,
+      bot_name: (bot_name as string).trim(),
+    }
+    if (welcome_message !== undefined) {
+      $set.welcome_message = (welcome_message as string | null) || null
+    }
+    if (persona !== undefined) {
+      $set.persona = (persona as string | null) || null
+    }
+    if (primary_color !== undefined) {
+      $set.primary_color = (primary_color as string | null) || null
     }
     if (sport != null && league != null && newEndpointUrl) {
       $set.sport = sport

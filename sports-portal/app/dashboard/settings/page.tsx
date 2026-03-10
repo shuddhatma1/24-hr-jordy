@@ -81,6 +81,7 @@ export default function SettingsPage() {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
+    if (saveStatus === 'saving') return
     setSaveStatus('saving')
     setErrorMsg('')
 

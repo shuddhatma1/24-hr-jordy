@@ -9,9 +9,12 @@
   var botId = script.getAttribute('data-bot-id');
   if (!botId) return;
 
-  // 2. Derive base URL from script.src (strip /widget.js and optional query string)
-  var src = script.src || '';
-  var baseUrl = src.replace(/\/widget\.js(\?.*)?$/, '');
+  // 2. Derive base URL — prefer explicit data-base-url, fall back to script.src
+  var baseUrl = script.getAttribute('data-base-url') || '';
+  if (!baseUrl) {
+    var src = script.src || '';
+    baseUrl = src.replace(/\/widget\.js(\?.*)?$/, '');
+  }
   if (!baseUrl) return;
 
   // 3. State
