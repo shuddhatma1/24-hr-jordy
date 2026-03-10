@@ -3,6 +3,11 @@ import { auth } from '@/auth'
 import { connectDB } from '@/lib/mongodb'
 import { Bot } from '@/lib/models/Bot'
 import { DataSource } from '@/lib/models/DataSource'
+// Import internal lib directly — pdf-parse/index.js has a debug mode that
+// tries to read a test PDF file, which doesn't exist on Netlify.
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error — no type declarations for pdf-parse internal module
+import pdfParseLib from 'pdf-parse/lib/pdf-parse'
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 const ALLOWED_EXTENSIONS = new Set(['.pdf', '.csv', '.txt'])
@@ -20,12 +25,7 @@ async function extractText(file: File, ext: string): Promise<string> {
   }
 
   if (ext === '.pdf') {
-    // Use require for internal lib — pdf-parse/index.js has a debug mode
-    // that tries to read a test PDF file, which doesn't exist on Netlify.
-    // Importing the internal lib directly bypasses that debug code.
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const pdfParse = require('pdf-parse/lib/pdf-parse') as (buf: Buffer) => Promise<{ text: string }>
-    const result = await pdfParse(buffer)
+    const result = await (pdfParseLib as (buf: Buffer) => Promise<{ text: string }>)(buffer)
     return result.text
   }
 
