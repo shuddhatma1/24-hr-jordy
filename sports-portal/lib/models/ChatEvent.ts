@@ -4,16 +4,16 @@ export interface IChatEvent extends Document {
   bot_id: string
   owner_id: string
   event_type: 'conversation_start' | 'message'
-  message_role: 'user'
+  conversation_id?: string
   created_at: Date
 }
 
 const ChatEventSchema = new Schema<IChatEvent>({
-  bot_id:       { type: String, required: true },
-  owner_id:     { type: String, required: true },
-  event_type:   { type: String, required: true, enum: ['conversation_start', 'message'] },
-  message_role: { type: String, required: true, enum: ['user'] },
-  created_at:   { type: Date, default: () => new Date(), expires: 90 * 86400 },
+  bot_id:          { type: String, required: true },
+  owner_id:        { type: String, required: true },
+  event_type:      { type: String, required: true, enum: ['conversation_start', 'message'] },
+  conversation_id: { type: String },
+  created_at:      { type: Date, default: () => new Date(), expires: 90 * 86400 },
 })
 
 ChatEventSchema.index({ bot_id: 1, created_at: -1 })

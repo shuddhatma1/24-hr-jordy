@@ -41,7 +41,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
-  const { bot_id, messages } = body as Record<string, unknown>
+  const { bot_id, messages, conversation_id } = body as Record<string, unknown>
 
   if (!bot_id || typeof bot_id !== 'string') {
     return NextResponse.json({ error: 'bot_id is required' }, { status: 400 })
@@ -115,12 +115,15 @@ export async function POST(req: Request) {
     }
 
     // Analytics: fire-and-forget event logging (non-fatal, never breaks chat)
+    const isNewConversation = sanitized.length === 1
     ChatEvent.create({
       bot_id: bot._id.toString(),
       owner_id: bot.owner_id,
-      event_type: sanitized.length === 1 ? 'conversation_start' : 'message',
-      message_role: 'user',
-    }).catch(() => {})
+      event_type: isNewConversation ? 'conversation_start' : 'message',
+      ...(typeof conversation_id === 'string' && conversation_id
+        ? { conversation_id }
+        : {}),
+    }).catch((err) => console.error('ChatEvent write failed:', err))
 
     const currentMessage = sanitized[sanitized.length - 1].content
     const history = sanitized.slice(0, -1).map((m) => ({

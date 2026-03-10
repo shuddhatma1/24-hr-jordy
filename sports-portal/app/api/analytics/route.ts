@@ -44,13 +44,15 @@ export async function GET(req: Request) {
       matchStage.created_at = { $gte: periodStart }
     }
 
-    // Totals
+    // Totals — count messages (excluding conversation_start) and conversations separately
     const [totals] = await ChatEvent.aggregate([
       { $match: matchStage },
       {
         $group: {
           _id: null,
-          total_messages: { $sum: 1 },
+          total_messages: {
+            $sum: { $cond: [{ $eq: ['$event_type', 'message'] }, 1, 0] },
+          },
           total_conversations: {
             $sum: { $cond: [{ $eq: ['$event_type', 'conversation_start'] }, 1, 0] },
           },
@@ -88,8 +90,9 @@ export async function GET(req: Request) {
       const date = row._id.date as string
       if (row._id.event_type === 'conversation_start') {
         conversationsMap.set(date, (conversationsMap.get(date) ?? 0) + row.count)
+      } else {
+        messagesMap.set(date, (messagesMap.get(date) ?? 0) + row.count)
       }
-      messagesMap.set(date, (messagesMap.get(date) ?? 0) + row.count)
     }
 
     // Merge into sorted array of all dates

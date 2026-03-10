@@ -66,7 +66,7 @@ export default function AnalyticsPage() {
       <div className="p-6 md:p-8 max-w-4xl">
         <div className="h-6 bg-gray-200 rounded w-32 mb-6 animate-pulse" />
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          {[...Array(3)].map((_, i) => (
+          {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="h-24 bg-gray-200 rounded-lg animate-pulse" />
           ))}
         </div>
@@ -99,11 +99,13 @@ export default function AnalyticsPage() {
     )
   }
 
-  const isEmpty = data && data.total_messages === 0
+  const isEmpty = data && data.total_messages === 0 && data.total_conversations === 0
 
-  const maxDaily = data
-    ? Math.max(...data.daily_messages.map((d) => d.count), 1)
-    : 1
+  // Cap to last 14 entries for readability; use reduce to avoid call-stack overflow on large arrays
+  const chartEntries = data
+    ? data.daily_messages.slice(-14)
+    : []
+  const maxDaily = chartEntries.reduce((m, d) => Math.max(m, d.count), 1)
 
   return (
     <div className="p-6 md:p-8 max-w-4xl">
@@ -164,7 +166,7 @@ export default function AnalyticsPage() {
         <div className="bg-white rounded-lg border border-gray-200 p-5">
           <h2 className="text-sm font-medium text-gray-700 mb-4">Daily messages</h2>
           <div className="flex items-end gap-1 h-40">
-            {data?.daily_messages.map((entry) => {
+            {chartEntries.map((entry) => {
               const heightPct = Math.max((entry.count / maxDaily) * 100, 4)
               return (
                 <div

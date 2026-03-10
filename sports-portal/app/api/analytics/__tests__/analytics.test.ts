@@ -91,17 +91,17 @@ describe('GET /api/analytics', () => {
 
     // 2 conversations: first has 3 messages, second has 1
     await ChatEvent.create([
-      { bot_id, owner_id: 'owner-1', event_type: 'conversation_start', message_role: 'user', created_at: today },
-      { bot_id, owner_id: 'owner-1', event_type: 'message', message_role: 'user', created_at: today },
-      { bot_id, owner_id: 'owner-1', event_type: 'message', message_role: 'user', created_at: today },
-      { bot_id, owner_id: 'owner-1', event_type: 'conversation_start', message_role: 'user', created_at: today },
+      { bot_id, owner_id: 'owner-1', event_type: 'conversation_start', created_at: today },
+      { bot_id, owner_id: 'owner-1', event_type: 'message', created_at: today },
+      { bot_id, owner_id: 'owner-1', event_type: 'message', created_at: today },
+      { bot_id, owner_id: 'owner-1', event_type: 'conversation_start', created_at: today },
     ])
 
     const res = await GET(makeRequest())
     const data = await res.json()
     expect(data.total_conversations).toBe(2)
-    expect(data.total_messages).toBe(4)
-    expect(data.avg_messages_per_conversation).toBe(2)
+    expect(data.total_messages).toBe(2) // only 'message' events, not 'conversation_start'
+    expect(data.avg_messages_per_conversation).toBe(1)
     expect(data.daily_messages.length).toBeGreaterThanOrEqual(1)
     expect(data.daily_conversations.length).toBeGreaterThanOrEqual(1)
   })
@@ -111,23 +111,24 @@ describe('GET /api/analytics', () => {
     const bot = await insertBot('owner-1')
     const bot_id = bot._id.toString()
 
-    // Event 15 days ago (within 30d, outside 7d)
+    // Events 15 days ago (within 30d, outside 7d)
     const fifteenDaysAgo = new Date()
     fifteenDaysAgo.setDate(fifteenDaysAgo.getDate() - 15)
-    await ChatEvent.create({
-      bot_id, owner_id: 'owner-1', event_type: 'conversation_start',
-      message_role: 'user', created_at: fifteenDaysAgo,
-    })
+    await ChatEvent.create([
+      { bot_id, owner_id: 'owner-1', event_type: 'conversation_start', created_at: fifteenDaysAgo },
+      { bot_id, owner_id: 'owner-1', event_type: 'message', created_at: fifteenDaysAgo },
+    ])
 
-    // 7d should return 0
+    // 7d should return 0 messages
     const res7d = await GET(makeRequest('7d'))
     const data7d = await res7d.json()
     expect(data7d.total_messages).toBe(0)
 
-    // 30d should return 1
+    // 30d should return 1 message (conversation_start excluded from messages count)
     const res30d = await GET(makeRequest('30d'))
     const data30d = await res30d.json()
     expect(data30d.total_messages).toBe(1)
+    expect(data30d.total_conversations).toBe(1)
   })
 
   it('defaults to 7d for invalid period param', async () => {
@@ -140,18 +141,16 @@ describe('GET /api/analytics', () => {
 
   it('does not return events from other owners', async () => {
     mockSession('owner-1')
-    const bot1 = await insertBot('owner-1')
+    await insertBot('owner-1')
     const bot2 = await insertBot('owner-2')
 
     await ChatEvent.create({
       bot_id: bot2._id.toString(), owner_id: 'owner-2',
-      event_type: 'conversation_start', message_role: 'user',
+      event_type: 'conversation_start',
     })
 
     const res = await GET(makeRequest())
     const data = await res.json()
     expect(data.total_messages).toBe(0)
-    // Suppress unused var warning
-    expect(bot1).toBeDefined()
   })
 })
