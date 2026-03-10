@@ -9,8 +9,8 @@
 | Item | Value |
 |---|---|
 | GitHub | https://github.com/shuddhatma1/24-hr-jordy.git |
-| Netlify URL | https://24-hr-jordy.netlify.app |
-| Last deployed | 2026-03-10 (M13 — Settings + Embed, PR #14 merged) |
+| Netlify URL | https://jordy-self-serviceable.netlify.app |
+| Last deployed | 2026-03-11 (M14 landing page, PR #15 merged) |
 
 ---
 
@@ -32,8 +32,8 @@
 | M12 | Knowledge Base | done | `feat/m12-knowledge` | Yes | PR #13 merged; FAQ + file upload (PDF/CSV/TXT) |
 | M13 | Settings + Embed Widget | done | `feat/m13-settings-embed` | Yes | PR #14 merged 2026-03-10; 249 tests |
 | Gemini | Real Bot Integration | **done** | `main` | Yes | Gemini 2.0 Flash + Google Search; direct SDK call in `/api/chat`; `@google/generative-ai` |
-| M14 | Landing Page | not started | `feat/m14-landing` | No | Hero, how-it-works, feature highlights — **NEXT** |
-| M15 | Analytics Dashboard | not started | `feat/m15-analytics` | No | Owner usage analytics — sidebar "Coming Soon" item added in M10 |
+| M14 | Landing Page | done | `feat/m14-landing` | Yes | PR #15 merged 2026-03-11; hero, how-it-works, features, accessibility fixes; 249 tests |
+| M15 | Analytics Dashboard | not started | `feat/m15-analytics` | No | Owner usage analytics — sidebar "Coming Soon" item added in M10 — **NEXT** |
 
 ---
 
@@ -151,6 +151,8 @@
 | 2026-03-10 | M10 | Dashboard overhaul — sidebar layout, DashboardShell, overview panel, bot creation modal, empty state, /setup redirect, 136 tests | triggered |
 | 2026-03-10 | M11 | Customize — welcome_message + persona + primary_color; PUT /api/bots/me with full validation; ChatWindow brand color + contrast; customize page + tests; 156 tests | triggered |
 | 2026-03-10 | M12 | Knowledge Base — DataSource model; GET/POST /api/data-sources; POST /api/data-sources/upload (PDF/CSV/TXT); DELETE /api/data-sources/[id]; chat system_context injection; Toast component; knowledge page; 225 tests | pending |
+| 2026-03-10 | M13 | Settings + Embed — change league, delete bot, widget.js embed script, ?embed=true chat mode; 249 tests | triggered |
+| 2026-03-11 | M14 | Landing Page — hero, how-it-works, feature highlights, bottom CTA, footer; accessibility (skip-to-content, aria-labelledby, landmark tests); 249 tests | triggered |
 
 ---
 
@@ -193,21 +195,41 @@
 - [x] `npm run lint && npm run type-check && npm run test` all exit 0
 
 ### M13 — Settings + Embed Widget
-- [ ] Settings panel shows current sport + league with change selects
-- [ ] Saving new sport/league calls `PUT /api/bots/me` and re-resolves endpoint URL
-- [ ] Danger zone: "Delete bot" shows inline confirmation before proceeding
-- [ ] `DELETE /api/bots/me` deletes bot + all DataSources; redirects to empty dashboard
-- [ ] `public/widget.js` loads on any page with `data-bot-id` attribute
-- [ ] Widget script injects floating button bottom-right
-- [ ] Clicking button opens iframe panel pointing to `/chat/[id]?embed=true`
-- [ ] Chat page supports `?embed=true`: compact layout, no full-page chrome
-- [ ] `npm run lint && npm run type-check && npm run test` all exit 0
+- [x] Settings panel shows current sport + league with change selects
+- [x] Saving new sport/league calls `PUT /api/bots/me` and re-resolves endpoint URL
+- [x] Danger zone: "Delete bot" shows inline confirmation before proceeding
+- [x] `DELETE /api/bots/me` deletes bot + all DataSources; redirects to empty dashboard
+- [x] `public/widget.js` loads on any page with `data-bot-id` attribute
+- [x] Widget script injects floating button bottom-right
+- [x] Clicking button opens iframe panel pointing to `/chat/[id]?embed=true`
+- [x] Chat page supports `?embed=true`: compact layout, no full-page chrome
+- [x] `npm run lint && npm run type-check && npm run test` all exit 0
 
 ### M14 — Landing Page
-- [ ] Hero section: headline, subtext, two CTAs (Get started free / Log in)
-- [ ] How it works: 3-step explanation
-- [ ] Feature highlights: 3 cards (instant answers, custom knowledge, embed anywhere)
-- [ ] Mobile-responsive at 375px width
+- [x] Hero section: headline, subtext, two CTAs (Get started free / Log in)
+- [x] How it works: 3-step explanation
+- [x] Feature highlights: 3 cards (instant answers, custom knowledge, embed anywhere)
+- [x] Mobile-responsive at 375px width
+- [x] Accessibility: skip-to-content link, aria-labelledby on sections, aria-label on nav
+- [x] Tests use `within()` scoped to landmarks (not fragile index selectors)
+- [x] `npm run lint && npm run type-check && npm run test` all exit 0
+
+### M15 — Analytics Dashboard
+- [ ] `ChatEvent` model: `bot_id` (indexed), `owner_id` (indexed), `event_type` (`conversation_start` | `message`), `message_role` (`user`), `created_at`
+- [ ] `POST /api/chat` logs a ChatEvent on every user message (fire-and-forget, non-fatal — never breaks chat)
+- [ ] `conversation_start` detected when `messages.length === 1` (first message in a conversation)
+- [ ] `GET /api/analytics` returns: `total_conversations`, `total_messages`, `avg_messages_per_conversation`, `daily_messages[]`, `daily_conversations[]`
+- [ ] `GET /api/analytics` supports `?period=7d|30d|all` query param (default `7d`)
+- [ ] `GET /api/analytics` requires auth; scoped to owner's bot
+- [ ] `GET /api/analytics` returns 404 if owner has no bot
+- [ ] Analytics dashboard page at `/dashboard/analytics` — stat cards + daily bar chart
+- [ ] Period toggle (7d / 30d / All) re-fetches data
+- [ ] Empty state: "No chat activity yet" with link to Overview
+- [ ] Sidebar: Analytics moves from "Coming Soon" to active nav item with `/dashboard/analytics` href
+- [ ] `DELETE /api/bots/me` cascades `ChatEvent.deleteMany({ bot_id })` alongside DataSource cascade
+- [ ] No new dependencies — bar chart is pure CSS/Tailwind
+- [ ] No fan message content stored — only event counts (privacy-friendly)
+- [ ] TTL index on `created_at` (90-day auto-expiry) as a safety net for free-tier storage
 - [ ] `npm run lint && npm run type-check && npm run test` all exit 0
 
 ---

@@ -3,6 +3,7 @@ import { auth } from '@/auth'
 import { connectDB } from '@/lib/mongodb'
 import { Bot } from '@/lib/models/Bot'
 import { DataSource } from '@/lib/models/DataSource'
+import { ChatEvent } from '@/lib/models/ChatEvent'
 import { SUPPORTED_SPORTS, LEAGUES_BY_SPORT, type Sport } from '@/lib/bot-registry'
 
 export async function GET() {
@@ -160,11 +161,12 @@ export async function DELETE() {
       return NextResponse.json({ error: 'No bot found' }, { status: 404 })
     }
 
-    // Cascade: delete all DataSources for this bot (non-fatal)
+    // Cascade: delete all DataSources + ChatEvents for this bot (non-fatal)
     try {
       await DataSource.deleteMany({ bot_id: bot._id.toString() })
+      await ChatEvent.deleteMany({ bot_id: bot._id.toString() })
     } catch {
-      // Orphaned data sources are harmless — bot is already deleted
+      // Orphaned records are harmless — bot is already deleted
     }
 
     return NextResponse.json({ success: true })
