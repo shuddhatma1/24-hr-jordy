@@ -44,6 +44,9 @@ export default function ChatWindow({
   ])
   const [isStreaming, setIsStreaming] = useState(false)
 
+  // Stable conversation ID for the lifetime of this chat session — used by analytics
+  const conversationIdRef = useRef<string | null>(null)
+
   // Ref so handleSend can always read the latest messages without being a
   // useCallback dependency — avoids recreating the function on every token.
   const messagesRef = useRef<Message[]>(messages)
@@ -116,7 +119,14 @@ export default function ChatWindow({
         const res = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ bot_id: botId, messages: apiHistory }),
+          body: JSON.stringify({
+            bot_id: botId,
+            messages: apiHistory,
+            // Generate conversation_id on first send; reuse for subsequent messages
+            conversation_id:
+              conversationIdRef.current ??
+              (conversationIdRef.current = crypto.randomUUID()),
+          }),
           signal: controller.signal,
         })
 

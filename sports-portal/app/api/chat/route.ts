@@ -4,6 +4,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 import { connectDB } from '@/lib/mongodb'
 import { Bot } from '@/lib/models/Bot'
 import { DataSource } from '@/lib/models/DataSource'
+import { ChatEvent } from '@/lib/models/ChatEvent'
 import { LEAGUES_BY_SPORT, type Sport } from '@/lib/bot-registry'
 
 const MAX_BODY_BYTES = 50 * 1024
@@ -40,7 +41,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
-  const { bot_id, messages } = body as Record<string, unknown>
+  const { bot_id, messages, conversation_id } = body as Record<string, unknown>
 
   if (!bot_id || typeof bot_id !== 'string') {
     return NextResponse.json({ error: 'bot_id is required' }, { status: 400 })
@@ -112,6 +113,17 @@ export async function POST(req: Request) {
     if (sanitized.length === 0 || sanitized[sanitized.length - 1].role !== 'user') {
       return NextResponse.json({ error: 'Last message must be from user' }, { status: 400 })
     }
+
+    // Analytics: fire-and-forget event logging (non-fatal, never breaks chat)
+    const isNewConversation = sanitized.length === 1
+    ChatEvent.create({
+      bot_id: bot._id.toString(),
+      owner_id: bot.owner_id,
+      event_type: isNewConversation ? 'conversation_start' : 'message',
+      ...(typeof conversation_id === 'string' && conversation_id
+        ? { conversation_id }
+        : {}),
+    }).catch((err) => console.error('ChatEvent write failed:', err))
 
     const currentMessage = sanitized[sanitized.length - 1].content
     const history = sanitized.slice(0, -1).map((m) => ({
