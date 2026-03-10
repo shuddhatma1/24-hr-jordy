@@ -86,13 +86,13 @@ A self-serve portal where sports league owners sign up, configure an AI stats ch
 | M7 — Chat Proxy API | done | `feat/m7-chat-api` | #8 |
 | M8 — Chat UI | done | `feat/m8-chat-ui` | #9 merged 2026-03-09 |
 | M9 — Polish | done | `feat/m9-polish` | #10 merged 2026-03-09 |
-| M10 — Dashboard Overhaul | not started | `feat/m10-dashboard` | — |
-| M11 — Customize | not started | `feat/m11-customize` | — |
+| M10 — Dashboard Overhaul | done | `feat/m10-dashboard` | #11 merged 2026-03-10 |
+| M11 — Customize | done | `feat/m11-customize` | #12 |
 | M12 — Knowledge Base | not started | `feat/m12-knowledge` | — |
 | M13 — Settings + Embed Widget | not started | `feat/m13-settings-embed` | — |
 | M14 — Landing Page | not started | `feat/m14-landing` | — |
 
-**M1–M9 complete and deployed. M10–M14 are the next phase — full dashboard overhaul.**
+**M1–M11 complete and deployed. M12–M14 are the next phase.**
 
 ---
 
@@ -237,13 +237,13 @@ Legend: `[Mx]` = modified in module x · `[Mx NEW]` = new file in module x
 ```ts
 {
   owner_id: String,          // NextAuth user id; unique: true — enforces 1 bot per owner
-  bot_name: String,          // required
+  bot_name: String,          // required, maxlength: 100
   sport: String,             // e.g. "soccer"
   league: String,            // e.g. "english-premier-league"
   bot_endpoint_url: String,  // pre-built bot endpoint (never returned in API responses)
-  welcome_message?: String,  // optional — custom first message shown to fans
-  persona?: String,          // optional — 'friendly' | 'professional' | 'enthusiastic'
-  primary_color?: String,    // optional — hex e.g. "#3B82F6", applied to chat header
+  welcome_message?: String,  // optional — maxlength: 300; custom first message shown to fans
+  persona?: String,          // optional — enum: 'friendly' | 'professional' | 'enthusiastic'
+  primary_color?: String,    // optional — match: /^#[0-9A-Fa-f]{6}$/; applied to chat header
   created_at: Date           // default: () => new Date()
 }
 ```

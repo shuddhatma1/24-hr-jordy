@@ -57,6 +57,10 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: 'bot_name is required' }, { status: 400 })
   }
 
+  if (bot_name.trim().length > 100) {
+    return NextResponse.json({ error: 'bot_name must be at most 100 characters' }, { status: 400 })
+  }
+
   if (persona != null && !VALID_PERSONAS.includes(persona as (typeof VALID_PERSONAS)[number])) {
     return NextResponse.json({ error: 'Invalid persona' }, { status: 400 })
   }

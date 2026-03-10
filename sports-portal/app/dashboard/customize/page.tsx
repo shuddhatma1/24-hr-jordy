@@ -16,6 +16,7 @@ type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 export default function CustomizePage() {
   const [loading, setLoading] = useState(true)
   const [noBotFound, setNoBotFound] = useState(false)
+  const [fetchError, setFetchError] = useState(false)
 
   const [botName, setBotName] = useState('')
   const [welcomeMessage, setWelcomeMessage] = useState('')
@@ -28,16 +29,18 @@ export default function CustomizePage() {
   useEffect(() => {
     const controller = new AbortController()
     fetch('/api/bots/me', { signal: controller.signal })
-      .then((res) => {
+      .then(async (res) => {
         if (res.status === 404) {
           setNoBotFound(true)
           setLoading(false)
-          return null
+          return
         }
-        return res.json()
-      })
-      .then((data) => {
-        if (!data) return
+        if (!res.ok) {
+          setFetchError(true)
+          setLoading(false)
+          return
+        }
+        const data = await res.json()
         setBotName(data.bot_name ?? '')
         setWelcomeMessage(data.welcome_message ?? '')
         setPersona(data.persona ?? '')
@@ -46,6 +49,7 @@ export default function CustomizePage() {
       })
       .catch((err) => {
         if (err instanceof DOMException && err.name === 'AbortError') return
+        setFetchError(true)
         setLoading(false)
       })
     return () => controller.abort()
@@ -86,6 +90,15 @@ export default function CustomizePage() {
             <div key={i} className="h-10 bg-gray-200 rounded animate-pulse" />
           ))}
         </div>
+      </div>
+    )
+  }
+
+  if (fetchError) {
+    return (
+      <div className="p-6 md:p-8">
+        <h1 className="text-xl font-semibold text-gray-900 mb-1">Customize</h1>
+        <p className="text-sm text-red-600">Failed to load bot data. Please refresh.</p>
       </div>
     )
   }

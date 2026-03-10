@@ -149,80 +149,84 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {status === 'loaded' && bot && (
-          <div className="space-y-4">
-            {/* Bot info card */}
-            <div className="bg-white border border-gray-200 rounded-xl p-5">
-              <h2 className="text-sm font-medium text-gray-500 mb-3">Your chatbot</h2>
-              <dl className="space-y-2">
-                {[
-                  { label: 'Name', value: bot.bot_name },
-                  { label: 'Sport', value: SPORT_LABELS[bot.sport as Sport] ?? bot.sport },
-                  { label: 'League', value: getLeagueLabel(bot.sport, bot.league) },
-                  { label: 'Created', value: formatDate(bot.created_at) },
-                ].map(({ label, value }) => (
-                  <div key={label} className="flex justify-between">
-                    <dt className="text-sm font-medium text-gray-500">{label}</dt>
-                    <dd className="text-sm text-gray-900">{value}</dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-
-            {/* Shareable link card */}
-            <div className="bg-white border border-gray-200 rounded-xl p-5">
-              <h2 className="text-sm font-medium text-gray-500 mb-1">Shareable link</h2>
-              <p className="text-xs text-gray-400 mb-3">Share with fans to give them direct access.</p>
-              {getChatUrl(bot.bot_id) ? (
-                <>
-                  <div className="flex gap-2">
-                    <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 font-mono truncate">
-                      {getChatUrl(bot.bot_id)}
+        {status === 'loaded' && bot && (() => {
+          const chatUrl = getChatUrl(bot.bot_id)
+          const embedCode = getEmbedCode(bot.bot_id)
+          return (
+            <div className="space-y-4">
+              {/* Bot info card */}
+              <div className="bg-white border border-gray-200 rounded-xl p-5">
+                <h2 className="text-sm font-medium text-gray-500 mb-3">Your chatbot</h2>
+                <dl className="space-y-2">
+                  {[
+                    { label: 'Name', value: bot.bot_name },
+                    { label: 'Sport', value: SPORT_LABELS[bot.sport as Sport] ?? bot.sport },
+                    { label: 'League', value: getLeagueLabel(bot.sport, bot.league) },
+                    { label: 'Created', value: formatDate(bot.created_at) },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="flex justify-between">
+                      <dt className="text-sm font-medium text-gray-500">{label}</dt>
+                      <dd className="text-sm text-gray-900">{value}</dd>
                     </div>
-                    <button onClick={() => void handleCopyLink()} className={copyBtnClass}>
-                      {copiedLink ? 'Copied!' : 'Copy'}
+                  ))}
+                </dl>
+              </div>
+
+              {/* Shareable link card */}
+              <div className="bg-white border border-gray-200 rounded-xl p-5">
+                <h2 className="text-sm font-medium text-gray-500 mb-1">Shareable link</h2>
+                <p className="text-xs text-gray-400 mb-3">Share with fans to give them direct access.</p>
+                {chatUrl ? (
+                  <>
+                    <div className="flex gap-2">
+                      <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 font-mono truncate">
+                        {chatUrl}
+                      </div>
+                      <button onClick={() => void handleCopyLink()} className={copyBtnClass}>
+                        {copiedLink ? 'Copied!' : 'Copy'}
+                      </button>
+                    </div>
+                    <a
+                      href={chatUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 inline-block text-sm text-blue-600 hover:underline"
+                    >
+                      Preview chatbot ↗
+                    </a>
+                  </>
+                ) : (
+                  <p className="text-sm text-amber-600">
+                    App URL not configured. Set <code className="font-mono">NEXT_PUBLIC_APP_URL</code> to generate a shareable link.
+                  </p>
+                )}
+              </div>
+
+              {/* Embed widget card */}
+              <div className="bg-white border border-gray-200 rounded-xl p-5">
+                <h2 className="text-sm font-medium text-gray-500 mb-1">Embed on your website</h2>
+                <p className="text-xs text-gray-400 mb-3">
+                  Paste this script tag before{' '}
+                  <code className="font-mono">&lt;/body&gt;</code> on your site.
+                </p>
+                {embedCode ? (
+                  <div className="flex gap-2 items-start">
+                    <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 font-mono break-all">
+                      {embedCode}
+                    </div>
+                    <button onClick={() => void handleCopyEmbed()} className={copyBtnClass}>
+                      {copiedEmbed ? 'Copied!' : 'Copy'}
                     </button>
                   </div>
-                  <a
-                    href={getChatUrl(bot.bot_id)!}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-2 inline-block text-sm text-blue-600 hover:underline"
-                  >
-                    Preview chatbot ↗
-                  </a>
-                </>
-              ) : (
-                <p className="text-sm text-amber-600">
-                  App URL not configured. Set <code className="font-mono">NEXT_PUBLIC_APP_URL</code> to generate a shareable link.
-                </p>
-              )}
+                ) : (
+                  <p className="text-sm text-amber-600">
+                    App URL not configured. Set <code className="font-mono">NEXT_PUBLIC_APP_URL</code> to generate embed code.
+                  </p>
+                )}
+              </div>
             </div>
-
-            {/* Embed widget card */}
-            <div className="bg-white border border-gray-200 rounded-xl p-5">
-              <h2 className="text-sm font-medium text-gray-500 mb-1">Embed on your website</h2>
-              <p className="text-xs text-gray-400 mb-3">
-                Paste this script tag before{' '}
-                <code className="font-mono">&lt;/body&gt;</code> on your site.
-              </p>
-              {getEmbedCode(bot.bot_id) ? (
-                <div className="flex gap-2 items-start">
-                  <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 font-mono break-all">
-                    {getEmbedCode(bot.bot_id)}
-                  </div>
-                  <button onClick={() => void handleCopyEmbed()} className={copyBtnClass}>
-                    {copiedEmbed ? 'Copied!' : 'Copy'}
-                  </button>
-                </div>
-              ) : (
-                <p className="text-sm text-amber-600">
-                  App URL not configured. Set <code className="font-mono">NEXT_PUBLIC_APP_URL</code> to generate embed code.
-                </p>
-              )}
-            </div>
-          </div>
-        )}
+          )
+        })()}
       </div>
 
       <CreateBotModal

@@ -79,6 +79,14 @@ describe('PUT /api/bots/me', () => {
     expect(data.error).toMatch(/bot_name/)
   })
 
+  it('returns 400 when bot_name exceeds 100 characters', async () => {
+    mockSession('owner-put-3b')
+    const res = await PUT(makeRequest({ bot_name: 'a'.repeat(101) }))
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toMatch(/bot_name/)
+  })
+
   it('returns 400 for an invalid persona', async () => {
     mockSession('owner-put-4')
     await Bot.create({
