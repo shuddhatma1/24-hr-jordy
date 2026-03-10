@@ -10,7 +10,7 @@
 |---|---|
 | GitHub | https://github.com/shuddhatma1/24-hr-jordy.git |
 | Netlify URL | https://24-hr-jordy.netlify.app |
-| Last deployed | 2026-03-10 (M11 — Customize, PR #12 merged) |
+| Last deployed | 2026-03-10 (M13 — Settings + Embed, PR #14 merged) |
 
 ---
 
@@ -29,9 +29,10 @@
 | M9 | Polish | done | `feat/m9-polish` | Yes | PR #10 merged 2026-03-09 |
 | M10 | Dashboard Overhaul | done | `feat/m10-dashboard` | Yes | PR #11 merged 2026-03-10 |
 | M11 | Customize | done | `feat/m11-customize` | Yes | PR #12 merged 2026-03-10 |
-| M12 | Knowledge Base | done | `feat/m12-knowledge` | No | FAQ + file upload (PDF/CSV/TXT); portal stores inputs — bot team handles consumption |
-| M13 | Settings + Embed Widget | not started | `feat/m13-settings-embed` | No | Change league, delete bot, widget.js |
-| M14 | Landing Page | not started | `feat/m14-landing` | No | Hero, how-it-works, feature highlights |
+| M12 | Knowledge Base | done | `feat/m12-knowledge` | Yes | PR #13 merged; FAQ + file upload (PDF/CSV/TXT) |
+| M13 | Settings + Embed Widget | done | `feat/m13-settings-embed` | Yes | PR #14 merged 2026-03-10; 249 tests |
+| Gemini | Real Bot Integration | **done** | `main` | Yes | Gemini 2.0 Flash + Google Search; direct SDK call in `/api/chat`; `@google/generative-ai` |
+| M14 | Landing Page | not started | `feat/m14-landing` | No | Hero, how-it-works, feature highlights — **NEXT** |
 | M15 | Analytics Dashboard | not started | `feat/m15-analytics` | No | Owner usage analytics — sidebar "Coming Soon" item added in M10 |
 
 ---
@@ -214,5 +215,5 @@
 ## Open Issues / Blockers
 | # | Issue | Module | Status |
 |---|---|---|---|
-| 1 | Real bot endpoint URL format unknown | M7 | open — mock used in dev |
-| 2 | Mock bot not publicly reachable in production | M7 | known limitation — real bot needed for production demo |
+| 1 | Real bot endpoint URL format unknown | M7 | **Resolved** — Gemini 2.0 Flash called directly in `/api/chat`; no external bot endpoint |
+| 2 | Mock bot not publicly reachable in production | M7 | **Resolved** — production uses Gemini; mock bot kept for local dev only |

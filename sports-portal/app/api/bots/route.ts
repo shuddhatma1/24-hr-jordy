@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { connectDB } from '@/lib/mongodb'
 import { Bot } from '@/lib/models/Bot'
-import { getEndpointUrl, SUPPORTED_SPORTS, LEAGUES_BY_SPORT, Sport } from '@/lib/bot-registry'
+import { SUPPORTED_SPORTS, LEAGUES_BY_SPORT, Sport } from '@/lib/bot-registry'
 
 export async function POST(req: Request) {
   const session = await auth()
@@ -38,11 +38,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid league for this sport' }, { status: 400 })
   }
 
-  const bot_endpoint_url = getEndpointUrl(sport, league)
-  if (!bot_endpoint_url) {
-    return NextResponse.json({ error: "This league isn't available yet" }, { status: 400 })
-  }
-
   try {
     await connectDB()
     const bot = await Bot.create({
@@ -50,7 +45,6 @@ export async function POST(req: Request) {
       bot_name: bot_name.trim(),
       sport,
       league,
-      bot_endpoint_url,
     })
     return NextResponse.json({ bot_id: bot._id.toString() }, { status: 201 })
   } catch (err: unknown) {

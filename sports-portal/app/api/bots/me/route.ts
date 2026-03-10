@@ -3,7 +3,7 @@ import { auth } from '@/auth'
 import { connectDB } from '@/lib/mongodb'
 import { Bot } from '@/lib/models/Bot'
 import { DataSource } from '@/lib/models/DataSource'
-import { getEndpointUrl, SUPPORTED_SPORTS, LEAGUES_BY_SPORT, type Sport } from '@/lib/bot-registry'
+import { SUPPORTED_SPORTS, LEAGUES_BY_SPORT, type Sport } from '@/lib/bot-registry'
 
 export async function GET() {
   const session = await auth()
@@ -86,7 +86,6 @@ export async function PUT(request: Request) {
   }
 
   // Sport and league must be provided together (both or neither)
-  let newEndpointUrl: string | null = null
   if (sport != null || league != null) {
     if (
       typeof sport !== 'string' || !sport ||
@@ -104,10 +103,6 @@ export async function PUT(request: Request) {
     if (!leaguesForSport.some((l) => l.value === league)) {
       return NextResponse.json({ error: 'Invalid league for this sport' }, { status: 400 })
     }
-    newEndpointUrl = getEndpointUrl(sport, league)
-    if (!newEndpointUrl) {
-      return NextResponse.json({ error: "This league isn't available yet" }, { status: 400 })
-    }
   }
 
   try {
@@ -124,10 +119,9 @@ export async function PUT(request: Request) {
     if (primary_color !== undefined) {
       $set.primary_color = (primary_color as string | null) || null
     }
-    if (sport != null && league != null && newEndpointUrl) {
+    if (sport != null && league != null) {
       $set.sport = sport
       $set.league = league
-      $set.bot_endpoint_url = newEndpointUrl
     }
     const bot = await Bot.findOneAndUpdate(
       { owner_id },

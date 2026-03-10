@@ -115,13 +115,12 @@ describe('POST /api/bots', () => {
     expect(data.error).toContain('100')
   })
 
-  it('returns 400 when MOCK_BOT_URL is unset (league not available)', async () => {
-    // MOCK_BOT_URL is deleted in afterEach; ensure it's absent here
+  it('creates bot successfully without MOCK_BOT_URL (Gemini integration — no endpoint needed)', async () => {
     mockSession('owner-8')
     const res = await POST(makeReq({ bot_name: 'Test', sport: 'soccer', league: 'english-premier-league' }))
-    expect(res.status).toBe(400)
+    expect(res.status).toBe(201)
     const data = await res.json()
-    expect(data.error).toBe("This league isn't available yet")
+    expect(data.bot_id).toBeTruthy()
   })
 
   it('returns 400 for invalid JSON body', async () => {

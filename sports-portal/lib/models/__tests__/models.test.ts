@@ -94,12 +94,6 @@ describe('Bot model', () => {
     ).rejects.toThrow()
   })
 
-  it('requires bot_endpoint_url', async () => {
-    await expect(
-      Bot.create({ owner_id: 'u1', bot_name: 'x', sport: 'soccer', league: 'epl' })
-    ).rejects.toThrow()
-  })
-
   it('enforces one bot per owner (unique owner_id)', async () => {
     await Bot.create({
       owner_id: 'user-dup',

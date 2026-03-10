@@ -5,7 +5,7 @@ export interface IBot extends Document {
   bot_name: string
   sport: string
   league: string
-  bot_endpoint_url: string
+  bot_endpoint_url?: string
   created_at: Date
   welcome_message?: string
   persona?: 'friendly' | 'professional' | 'enthusiastic'
@@ -17,7 +17,7 @@ const BotSchema = new Schema<IBot>({
   bot_name: { type: String, required: true, maxlength: 100 },
   sport: { type: String, required: true },
   league: { type: String, required: true },
-  bot_endpoint_url: { type: String, required: true },
+  bot_endpoint_url: { type: String },
   created_at: { type: Date, default: () => new Date() },
   welcome_message: { type: String, maxlength: 300 },
   persona: { type: String, enum: ['friendly', 'professional', 'enthusiastic'] },

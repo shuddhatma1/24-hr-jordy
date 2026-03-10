@@ -14,12 +14,12 @@ The owner's journey has four stages:
 Sign up → Create bot → Configure it → Share it
 ```
 
-**This portal owns stages 1–4 from the owner's perspective only.** The fan experience and the AI bot are handled by a separate bot team — do not design or engineer for those concerns here.
+**This portal owns stages 1–4 from the owner's perspective only.** The portal also owns the fan-facing chat experience and the AI bot (Gemini 2.0 Flash) — all in one codebase.
 
 Concretely:
-- **Fan UX** (chat page behaviour, response quality, session persistence) — bot team's domain
-- **How the bot consumes knowledge** (system_context format, AI processing) — bot team's domain
-- **Portal's job on knowledge**: collect owner inputs cleanly (FAQ text, uploaded files), store them, and make them available. How the bot uses them is not our concern.
+- **Fan UX** (chat page, streaming response) — owned here: `app/chat/[bot_id]/page.tsx` + `ChatWindow.tsx`
+- **AI bot** — owned here: `app/api/chat/route.ts` calls Gemini 2.0 Flash with Google Search grounding directly
+- **Portal's job on knowledge**: collect owner inputs cleanly (FAQ text, uploaded files), store them, inject as `system_context` into Gemini system instruction
 - **Analytics**: sidebar item is present as "Coming Soon" — signals roadmap investment to owners. Full analytics dashboard is a future module.
 
 **Dashboard principle:** every page should guide the owner to their next action. The dashboard is not just a data display — it is a configuration journey. Show progress, surface what's missing, celebrate what's done.
@@ -42,17 +42,18 @@ A self-serve portal where sports league owners sign up, configure an AI stats ch
 | Deployment | Netlify + `@netlify/plugin-nextjs` | User preference; plugin handles SSR/streaming |
 | **Netlify production branch** | **`main`** | **Pushes to other branches trigger cancelled previews, not production deploys** |
 | Auth config split | `auth.config.ts` (edge) + `auth.ts` (server) | Mongoose uses `eval` — banned in Edge Runtime. Middleware must never import `auth.ts` |
-| Streaming | Native `fetch` + `ReadableStream` | Proxy bot stream directly, no extra library |
+| Streaming | `TransformStream` + Gemini SDK `sendMessageStream` | Direct Gemini stream → SSE; no external bot proxy |
 | Styling | Tailwind CSS | Fast utility-first styling |
 | Package manager | npm | Standard |
-| Bot integration | Pre-built bot per league, portal proxies | Bot team builds agents independently |
-| Dev bot | Express mock server on `:3001` | Develop portal without real bot |
-| Stats source | NOT the portal's concern | Bot handles this internally |
+| Bot integration | **Gemini 2.0 Flash + Google Search grounding** called directly from `/api/chat` | Single codebase; no separate bot service; `@google/generative-ai` SDK |
+| Dev bot | Express mock server on `:3001` (still usable via `MOCK_BOT_URL`) | Local dev without burning API credits |
+| Stats source | Google Search grounding via Gemini `tools: [{ googleSearch: {} }]` | Automatic real-time search; no manual data pipeline |
 | Dashboard routing (M10+) | Next.js nested routes `/dashboard/*` | Bookmarkable, middleware-protected, `usePathname()` drives sidebar |
 | Embed widget (M13) | `public/widget.js` iframe to `/chat/[id]?embed=true` | Reuses chat page; no duplication; no external deps |
-| Knowledge injection (M12) | `/api/chat` prepends DataSources as `system_context` | Mock bot ignores it; real bot uses it; no AI in portal |
+| Knowledge injection (M12) | `/api/chat` prepends DataSources as `system_context` in Gemini system instruction | Owner knowledge + Gemini grounding; bounded at 100K chars |
 | File storage (M12) | Parse on upload, store text in MongoDB only | No S3/Blob needed; binary discarded after extraction |
 | Bot creation UX (M10) | Modal in dashboard, not separate `/setup` page | Owners stay in context; `/setup` becomes a redirect |
+| `bot_endpoint_url` | Optional field in `Bot` schema (vestigial) | Gemini called directly; field kept to avoid migration on existing records |
 
 ---
 
@@ -88,11 +89,11 @@ A self-serve portal where sports league owners sign up, configure an AI stats ch
 | M9 — Polish | done | `feat/m9-polish` | #10 merged 2026-03-09 |
 | M10 — Dashboard Overhaul | done | `feat/m10-dashboard` | #11 merged 2026-03-10 |
 | M11 — Customize | done | `feat/m11-customize` | #12 |
-| M12 — Knowledge Base | done + hardened | `feat/m12-knowledge` | #13 (pending merge — rebase base to `main`) |
-| M13 — Settings + Embed Widget | not started | `feat/m13-settings-embed` | — |
+| M12 — Knowledge Base | done | `feat/m12-knowledge` | #13 merged |
+| M13 — Settings + Embed Widget | done | `feat/m13-settings-embed` | #14 merged 2026-03-10 |
 | M14 — Landing Page | not started | `feat/m14-landing` | — |
 
-**M1–M12 complete. M12 has security hardening applied (not yet committed). M13–M14 are the next phase.**
+**M1–M13 complete. M14 (Landing Page) is next.**
 
 ---
 
@@ -196,7 +197,7 @@ Legend: `[Mx]` = modified in module x · `[Mx NEW]` = new file in module x
 | PUT | `/api/bots/me` | Session | Update bot settings (name, welcome msg, persona, color, sport/league) |
 | DELETE | `/api/bots/me` | Session | Delete bot + cascade DataSources |
 | GET | `/api/bots/[bot_id]` | None | Bot info — includes welcome_message + primary_color (fan chat page) |
-| POST | `/api/chat` | None | Proxy to bot with DataSource context injected, stream response |
+| POST | `/api/chat` | None | Call Gemini 2.0 Flash directly; inject DataSource `system_context` + persona into system instruction; stream SSE response |
 | GET | `/api/data-sources` | Session | List owner's knowledge entries; `?type=faq\|file` filter |
 | POST | `/api/data-sources` | Session | Create FAQ text entry |
 | POST | `/api/data-sources/upload` | Session | Upload + parse PDF/CSV/TXT — stores extracted text |
@@ -241,7 +242,7 @@ Legend: `[Mx]` = modified in module x · `[Mx NEW]` = new file in module x
   bot_name: String,          // required, maxlength: 100
   sport: String,             // e.g. "soccer"
   league: String,            // e.g. "english-premier-league"
-  bot_endpoint_url: String,  // pre-built bot endpoint (never returned in API responses)
+  bot_endpoint_url?: String, // vestigial — Gemini called directly; optional; never returned in API responses
   welcome_message?: String,  // optional — maxlength: 300; custom first message shown to fans
   persona?: String,          // optional — enum: 'friendly' | 'professional' | 'enthusiastic'
   primary_color?: String,    // optional — match: /^#[0-9A-Fa-f]{6}$/; applied to chat header
@@ -290,8 +291,8 @@ In production: replace `MOCK_BOT_URL` with per-league env vars (e.g. `EPL_BOT_UR
 
 | Question | Status |
 |---|---|
-| Real bot endpoint URL format | Pending — mock used for now |
-| Mock bot not publicly reachable in production | Pending — may need ngrok or hosted bot |
+| Real bot endpoint URL format | **Resolved** — Gemini 2.0 Flash called directly; no external bot endpoint needed |
+| Mock bot not publicly reachable in production | **Resolved** — mock bot only used for local dev (set `MOCK_BOT_URL`); production uses Gemini |
 
 ---
 
@@ -301,10 +302,14 @@ In production: replace `MOCK_BOT_URL` with per-league env vars (e.g. `EPL_BOT_UR
 |---|---|---|
 | Dashboard routing | Next.js nested routes (`/dashboard/*`) | Bookmarkable URLs, middleware protection inherited, `usePathname()` drives active nav |
 | Embed widget | `public/widget.js` injects iframe pointing to `/chat/[id]?embed=true` | Reuses existing chat page; zero duplication; no external dependencies |
-| Knowledge injection | `/api/chat` fetches DataSources, caps at 100K chars, sends `system_context` to bot endpoint | Mock bot ignores it; real bot can use it; no AI processing in portal; bounded payload |
+| Knowledge injection | `/api/chat` fetches DataSources, builds Gemini system instruction with `system_context` + persona + bot identity | Owner knowledge + Google Search grounding; bounded at 100K chars |
 | File storage | Parse on upload, truncate to 50K chars, store in MongoDB only | No S3/Blob service needed; binary discarded after extraction; content capped |
-| Bot fetch timeout | `AbortController` with 30s timeout on `/api/chat` → bot endpoint | Prevents DoS from hanging bot endpoints |
-| Message validation | `isValidMessage()` checks role (user/assistant/system) + content (string) | Prevents arbitrary data forwarded to bot endpoint |
+| Gemini integration | `@google/generative-ai` SDK, `gemini-2.0-flash`, `tools: [{ googleSearch: {} }]` | Real-time sports answers via Google Search grounding; single-codebase, no separate bot service |
+| Gemini streaming | `chat.sendMessageStream()` → `TransformStream` → SSE `data: {"token":"..."}` | Direct stream from Gemini to browser; `[DONE]` sentinel; citation markers stripped |
+| Role mapping | `assistant` → `model` before Gemini `startChat({ history })` | Gemini uses `user`/`model`; portal uses `user`/`assistant` — converted at API boundary |
+| System instruction | Bot name + league + persona + DataSources assembled per-request | Every bot gets customized personality and owner knowledge injected |
+| Gemini timeout | `AbortController` with 20s timeout (Netlify free functions: 10s, Pro: 26s) | Leaves buffer for function overhead |
+| Message validation | Messages must alternate `user`/`assistant`; strip system-role; last must be `user` | Gemini requires strict alternation; sanitized before `startChat()` |
 | Bot creation | Modal in dashboard, not a separate page | Better UX; owners stay in context; `/setup` becomes a redirect |
 | Sidebar navigation | `DashboardShell` (`'use client'`) + `dashboard/layout.tsx` (server) | Server layout calls `auth()`; client shell handles `usePathname` + mobile state |
 
