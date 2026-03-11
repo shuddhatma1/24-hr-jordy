@@ -37,8 +37,9 @@ afterEach(() => {
 describe('DashboardPage', () => {
   it('shows loading state initially', () => {
     mockFetch(200, mockBot)
-    render(<DashboardPage />)
-    expect(screen.getByText('Loading...')).toBeInTheDocument()
+    const { container } = render(<DashboardPage />)
+    // Dashboard uses skeleton loaders for loading state
+    expect(container.querySelector('.skeleton')).toBeInTheDocument()
   })
 
   it('shows empty state when API returns 404', async () => {

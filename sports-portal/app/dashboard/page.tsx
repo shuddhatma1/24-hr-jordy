@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { SPORT_LABELS, LEAGUES_BY_SPORT, type Sport } from '@/lib/bot-registry'
 import CreateBotModal, { type BotData } from '@/components/dashboard/CreateBotModal'
+import { Copy, Check, ExternalLink, Link2, Code, Bot } from 'lucide-react'
 
 function getChatUrl(botId: string): string | null {
   const base = (process.env.NEXT_PUBLIC_APP_URL ?? '').replace(/\/$/, '')
@@ -106,16 +107,15 @@ export default function DashboardPage() {
     setModalOpen(false)
   }
 
-  const copyBtnClass =
-    'px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
-
   return (
     <>
       <div className="p-6 md:p-8 max-w-2xl">
-        <h1 className="text-xl font-semibold text-gray-900 mb-6">Overview</h1>
-
         {status === 'loading' && (
-          <p className="text-sm text-gray-500">Loading...</p>
+          <div className="space-y-4">
+            <div className="h-24 rounded-2xl skeleton" />
+            <div className="h-40 rounded-2xl skeleton" />
+            <div className="h-40 rounded-2xl skeleton" />
+          </div>
         )}
 
         {status === 'error' && (
@@ -124,25 +124,14 @@ export default function DashboardPage() {
 
         {status === 'empty' && (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <svg
-              className="w-12 h-12 text-gray-300"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={1.5}
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M8.625 9.75a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 0 1 .778-.332 48.294 48.294 0 0 0 5.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"
-              />
-            </svg>
-            <h2 className="mt-4 text-lg font-semibold text-gray-900">No chatbot yet</h2>
-            <p className="mt-1 text-sm text-gray-500">Create your chatbot in 3 quick steps.</p>
+            <div className="w-16 h-16 rounded-2xl bg-neutral-100 flex items-center justify-center mb-4">
+              <Bot className="w-8 h-8 text-neutral-400" />
+            </div>
+            <h2 className="text-lg font-semibold text-neutral-900">No chatbot yet</h2>
+            <p className="mt-1 text-sm text-neutral-500">Create your chatbot in 3 quick steps.</p>
             <button
               onClick={() => setModalOpen(true)}
-              className="mt-6 px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="mt-6 px-5 py-2.5 gradient-primary text-white text-sm font-medium rounded-xl shadow-glow hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 transition-opacity"
             >
               Create your chatbot
             </button>
@@ -153,10 +142,20 @@ export default function DashboardPage() {
           const chatUrl = getChatUrl(bot.bot_id)
           const embedCode = getEmbedCode(bot.bot_id)
           return (
-            <div className="space-y-4">
+            <div className="space-y-6">
+              {/* Welcome hero banner */}
+              <div className="rounded-2xl gradient-primary p-6 text-white">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-3 h-3 rounded-full bg-green-400 animate-pulse" />
+                  <span className="text-sm font-medium text-white/80">Your bot is live</span>
+                </div>
+                <h1 className="text-xl font-bold">Welcome back!</h1>
+                <p className="text-sm text-white/80 mt-1">{bot.bot_name} is ready to chat with your fans.</p>
+              </div>
+
               {/* Bot info card */}
-              <div className="bg-white border border-gray-200 rounded-xl p-5">
-                <h2 className="text-sm font-medium text-gray-500 mb-3">Your chatbot</h2>
+              <div className="bg-white rounded-2xl shadow-card p-6">
+                <h2 className="text-sm font-medium text-neutral-500 mb-3">Your chatbot</h2>
                 <dl className="space-y-2">
                   {[
                     { label: 'Name', value: bot.bot_name },
@@ -165,34 +164,44 @@ export default function DashboardPage() {
                     { label: 'Created', value: formatDate(bot.created_at) },
                   ].map(({ label, value }) => (
                     <div key={label} className="flex justify-between">
-                      <dt className="text-sm font-medium text-gray-500">{label}</dt>
-                      <dd className="text-sm text-gray-900">{value}</dd>
+                      <dt className="text-sm font-medium text-neutral-500">{label}</dt>
+                      <dd className="text-sm text-neutral-900">{value}</dd>
                     </div>
                   ))}
                 </dl>
               </div>
 
               {/* Shareable link card */}
-              <div className="bg-white border border-gray-200 rounded-xl p-5">
-                <h2 className="text-sm font-medium text-gray-500 mb-1">Shareable link</h2>
-                <p className="text-xs text-gray-400 mb-3">Share with fans to give them direct access.</p>
+              <div className="bg-white rounded-2xl shadow-card p-6">
+                <div className="flex items-center gap-2 mb-1">
+                  <Link2 className="w-4 h-4 text-brand-500" />
+                  <h2 className="text-sm font-medium text-neutral-900">Shareable link</h2>
+                </div>
+                <p className="text-xs text-neutral-400 mb-3">Share with fans to give them direct access.</p>
                 {chatUrl ? (
                   <>
-                    <div className="flex gap-2">
-                      <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 font-mono truncate">
+                    <div className="relative">
+                      <div className="bg-neutral-50 rounded-xl px-4 py-3 pr-20 text-sm text-neutral-800 font-mono truncate">
                         {chatUrl}
                       </div>
-                      <button onClick={() => void handleCopyLink()} className={copyBtnClass}>
-                        {copiedLink ? 'Copied!' : 'Copy'}
+                      <button
+                        onClick={() => void handleCopyLink()}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg gradient-primary text-white text-xs font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-opacity"
+                      >
+                        {copiedLink ? (
+                          <span className="flex items-center gap-1"><Check className="w-3 h-3" /> Copied</span>
+                        ) : (
+                          <span className="flex items-center gap-1"><Copy className="w-3 h-3" /> Copy</span>
+                        )}
                       </button>
                     </div>
                     <a
                       href={chatUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-2 inline-block text-sm text-blue-600 hover:underline"
+                      className="mt-2 inline-flex items-center gap-1 text-sm text-brand-600 hover:underline"
                     >
-                      Preview chatbot ↗
+                      Preview chatbot <ExternalLink className="w-3 h-3" />
                     </a>
                   </>
                 ) : (
@@ -203,19 +212,29 @@ export default function DashboardPage() {
               </div>
 
               {/* Embed widget card */}
-              <div className="bg-white border border-gray-200 rounded-xl p-5">
-                <h2 className="text-sm font-medium text-gray-500 mb-1">Embed on your website</h2>
-                <p className="text-xs text-gray-400 mb-3">
+              <div className="bg-white rounded-2xl shadow-card p-6">
+                <div className="flex items-center gap-2 mb-1">
+                  <Code className="w-4 h-4 text-brand-500" />
+                  <h2 className="text-sm font-medium text-neutral-900">Embed on your website</h2>
+                </div>
+                <p className="text-xs text-neutral-400 mb-3">
                   Paste this script tag before{' '}
                   <code className="font-mono">&lt;/body&gt;</code> on your site.
                 </p>
                 {embedCode ? (
-                  <div className="flex gap-2 items-start">
-                    <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 font-mono break-all">
+                  <div className="relative">
+                    <div className="bg-neutral-900 rounded-xl px-4 py-3 pr-20 text-sm text-green-400 font-mono break-all">
                       {embedCode}
                     </div>
-                    <button onClick={() => void handleCopyEmbed()} className={copyBtnClass}>
-                      {copiedEmbed ? 'Copied!' : 'Copy'}
+                    <button
+                      onClick={() => void handleCopyEmbed()}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg bg-neutral-700 text-neutral-200 text-xs font-medium hover:bg-neutral-600 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-colors"
+                    >
+                      {copiedEmbed ? (
+                        <span className="flex items-center gap-1"><Check className="w-3 h-3" /> Copied</span>
+                      ) : (
+                        <span className="flex items-center gap-1"><Copy className="w-3 h-3" /> Copy</span>
+                      )}
                     </button>
                   </div>
                 ) : (

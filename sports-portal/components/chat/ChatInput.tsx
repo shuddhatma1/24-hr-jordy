@@ -54,7 +54,7 @@ export default function ChatInput({ onSend, disabled }: Props) {
 
   return (
     <div
-      className="bg-white border-t border-gray-200 px-3 py-2 flex-shrink-0"
+      className="bg-white/80 backdrop-blur-xl border-t border-neutral-200 px-3 py-2 flex-shrink-0"
       style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
     >
       <div className="flex items-end gap-2">
@@ -68,14 +68,14 @@ export default function ChatInput({ onSend, disabled }: Props) {
           disabled={disabled}
           maxLength={MAX_LENGTH}
           rows={1}
-          className="flex-1 px-3 py-2.5 border border-gray-300 rounded-2xl text-base text-gray-900 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-gray-400 leading-relaxed"
+          className="flex-1 px-3 py-2.5 border border-neutral-200 rounded-2xl text-base text-neutral-900 resize-none focus:outline-none focus:ring-2 focus:ring-brand-500 disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-neutral-400 leading-relaxed"
         />
         <button
           type="button"
           onClick={handleSubmit}
           disabled={disabled || !value.trim()}
           aria-label="Send"
-          className="flex-shrink-0 w-11 h-11 flex items-center justify-center bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="flex-shrink-0 w-11 h-11 flex items-center justify-center gradient-primary text-white rounded-full hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {/* Arrow-up icon */}
           <svg
@@ -96,7 +96,7 @@ export default function ChatInput({ onSend, disabled }: Props) {
         </button>
       </div>
       {value.length >= SHOW_COUNT_THRESHOLD && (
-        <div className="text-xs text-gray-400 text-right mt-1 pr-12" aria-live="polite">
+        <div className="text-xs text-neutral-400 text-right mt-1 pr-12" aria-live="polite">
           {value.length}/{MAX_LENGTH}
         </div>
       )}

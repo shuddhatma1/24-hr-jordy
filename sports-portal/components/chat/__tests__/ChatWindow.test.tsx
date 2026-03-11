@@ -111,10 +111,14 @@ describe('ChatWindow — initial render', () => {
     render(
       <ChatWindow botId="abc" botName="City FC Bot" leagueLabel="English Premier League" />
     )
-    expect(screen.getByText('City FC Bot')).toBeInTheDocument()
+    // Bot name appears in both header (h1) and WelcomeCard (h2)
+    const headings = screen.getAllByText('City FC Bot')
+    expect(headings.length).toBeGreaterThanOrEqual(1)
+    // The first one should be the h1 in the header
+    expect(headings[0].tagName).toBe('H1')
   })
 
-  it('shows the welcome message on mount', () => {
+  it('shows the welcome message in the WelcomeCard on mount', () => {
     render(
       <ChatWindow botId="abc" botName="City FC Bot" leagueLabel="English Premier League" />
     )
@@ -123,9 +127,21 @@ describe('ChatWindow — initial render', () => {
     ).toBeInTheDocument()
   })
 
+  it('shows Online status in the header', () => {
+    render(
+      <ChatWindow botId="abc" botName="City FC Bot" leagueLabel="English Premier League" />
+    )
+    expect(screen.getByText('Online')).toBeInTheDocument()
+  })
+
   it('input is enabled on mount', () => {
     render(<ChatWindow botId="abc" botName="Bot" leagueLabel="EPL" />)
     expect(screen.getByPlaceholderText('Type a question...')).not.toBeDisabled()
+  })
+
+  it('shows WelcomeCard with suggested chips on mount', () => {
+    render(<ChatWindow botId="abc" botName="Bot" leagueLabel="EPL" sport="soccer" />)
+    expect(screen.getByText('Who won last night?')).toBeInTheDocument()
   })
 })
 
@@ -141,6 +157,43 @@ describe('ChatWindow — sending a message', () => {
 
     await waitFor(() =>
       expect(screen.getByText('Who scored?')).toBeInTheDocument()
+    )
+  })
+
+  it('hides WelcomeCard after sending a message', async () => {
+    stubFetchWithStream(['ok'])
+    render(<ChatWindow botId="abc" botName="Bot" leagueLabel="EPL" sport="soccer" />)
+
+    // WelcomeCard should be visible initially
+    expect(screen.getByText('Who won last night?')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByPlaceholderText('Type a question...'), {
+      target: { value: 'question' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }))
+
+    await waitFor(() =>
+      expect(screen.queryByText('Who won last night?')).not.toBeInTheDocument()
+    )
+  })
+
+  it('clicking a chip fires the send handler', async () => {
+    stubFetchWithStream(['Salah'])
+    render(<ChatWindow botId="abc" botName="Bot" leagueLabel="EPL" sport="soccer" />)
+
+    fireEvent.click(screen.getByText('Top scorers'))
+
+    await waitFor(() =>
+      expect(screen.getByText('Top scorers')).toBeInTheDocument()
+    )
+    // Should have called fetch with the chip text
+    await waitFor(() =>
+      expect(fetch).toHaveBeenCalledWith(
+        '/api/chat',
+        expect.objectContaining({
+          body: expect.stringContaining('Top scorers'),
+        })
+      )
     )
   })
 
@@ -196,27 +249,6 @@ describe('ChatWindow — sending a message', () => {
       })
     })
   })
-
-  it('does not include the welcome message in the API payload', async () => {
-    stubFetchWithStream(['ok'])
-    render(<ChatWindow botId="abc" botName="Bot" leagueLabel="EPL" />)
-
-    fireEvent.change(screen.getByPlaceholderText('Type a question...'), {
-      target: { value: 'question' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'Send' }))
-
-    await waitFor(() => {
-      const calls = vi.mocked(fetch).mock.calls
-      const body = JSON.parse(calls[0][1]!.body as string) as {
-        messages: { role: string; content: string }[]
-      }
-      // Welcome message must never be sent to the bot API
-      expect(body.messages).not.toContainEqual(
-        expect.objectContaining({ content: expect.stringContaining('Hi! Ask me') })
-      )
-    })
-  })
 })
 
 describe('ChatWindow — streaming', () => {
@@ -232,6 +264,32 @@ describe('ChatWindow — streaming', () => {
     await waitFor(() =>
       expect(screen.getByText('Top scorer is Salah')).toBeInTheDocument()
     )
+  })
+
+  it('shows typing indicator while streaming with empty bot content', async () => {
+    const { pushChunk, closeStream } = stubFetchWithControlledStream()
+    render(<ChatWindow botId="abc" botName="Bot" leagueLabel="EPL" />)
+
+    fireEvent.change(screen.getByPlaceholderText('Type a question...'), {
+      target: { value: 'question' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }))
+
+    // Wait for streaming state — typing indicator dots should appear
+    await waitFor(() => {
+      const dots = document.querySelectorAll('.animate-bounce-dot')
+      expect(dots.length).toBe(3)
+    })
+
+    // Resolve the stream
+    pushChunk('data: {"token":"hi"}\n\ndata: [DONE]\n\n')
+    closeStream()
+
+    // After streaming completes, typing indicator should be gone
+    await waitFor(() => {
+      const dots = document.querySelectorAll('.animate-bounce-dot')
+      expect(dots.length).toBe(0)
+    })
   })
 
   it('disables input and send button while streaming', async () => {

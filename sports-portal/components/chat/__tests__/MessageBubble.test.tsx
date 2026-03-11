@@ -19,14 +19,14 @@ describe('MessageBubble', () => {
     expect(container.firstChild).toHaveClass('justify-start')
   })
 
-  it('applies blue background for user messages', () => {
+  it('applies gradient background for user messages', () => {
     render(<MessageBubble role="user" content="Hi" />)
-    expect(screen.getByTestId('message-bubble')).toHaveClass('bg-blue-600')
+    expect(screen.getByTestId('message-bubble')).toHaveClass('from-brand-500')
   })
 
-  it('applies gray background for bot messages', () => {
+  it('applies neutral background for bot messages', () => {
     render(<MessageBubble role="bot" content="Hi" />)
-    expect(screen.getByTestId('message-bubble')).toHaveClass('bg-gray-100')
+    expect(screen.getByTestId('message-bubble')).toHaveClass('bg-neutral-100')
   })
 
   it('applies white text for user messages', () => {
@@ -34,33 +34,41 @@ describe('MessageBubble', () => {
     expect(screen.getByTestId('message-bubble')).toHaveClass('text-white')
   })
 
-  it('applies dark text for bot messages', () => {
+  it('applies neutral text for bot messages', () => {
     render(<MessageBubble role="bot" content="Hi" />)
-    expect(screen.getByTestId('message-bubble')).toHaveClass('text-gray-900')
+    expect(screen.getByTestId('message-bubble')).toHaveClass('text-neutral-900')
   })
 
-  it('shows streaming cursor when isStreaming is true', () => {
-    render(<MessageBubble role="bot" content="Typing..." isStreaming />)
-    expect(screen.getByText('▌')).toBeInTheDocument()
+  it('renders markdown bold in bot messages', () => {
+    render(<MessageBubble role="bot" content="This is **bold** text" />)
+    const strong = screen.getByText('bold')
+    expect(strong.tagName).toBe('STRONG')
   })
 
-  it('does not show streaming cursor when isStreaming is false', () => {
-    render(<MessageBubble role="bot" content="Done" isStreaming={false} />)
-    expect(screen.queryByText('▌')).not.toBeInTheDocument()
+  it('does not render markdown in user messages', () => {
+    render(<MessageBubble role="user" content="This is **bold** text" />)
+    expect(screen.getByText('This is **bold** text')).toBeInTheDocument()
+    expect(screen.queryByText('bold')).toBeNull()
   })
 
-  it('does not show streaming cursor by default', () => {
-    render(<MessageBubble role="bot" content="Done" />)
-    expect(screen.queryByText('▌')).not.toBeInTheDocument()
+  it('shows bot avatar when showAvatar is true', () => {
+    render(<MessageBubble role="bot" content="Hi" botName="City Bot" showAvatar />)
+    expect(screen.getByText('C')).toBeInTheDocument()
   })
 
-  it('renders with empty content and shows cursor when streaming', () => {
-    render(<MessageBubble role="bot" content="" isStreaming />)
-    expect(screen.getByText('▌')).toBeInTheDocument()
+  it('hides avatar (renders spacer) when showAvatar is false', () => {
+    const { container } = render(
+      <MessageBubble role="bot" content="Hi" botName="City Bot" showAvatar={false} />
+    )
+    // Should have a spacer div (w-7 flex-shrink-0) instead of avatar
+    const spacer = container.querySelector('.w-7.flex-shrink-0')
+    expect(spacer).toBeInTheDocument()
+    // Should not render the avatar letter
+    expect(screen.queryByText('C')).not.toBeInTheDocument()
   })
 
-  it('does not render cursor on user messages when isStreaming is false', () => {
-    render(<MessageBubble role="user" content="Hi" isStreaming={false} />)
-    expect(screen.queryByText('▌')).not.toBeInTheDocument()
+  it('uses first letter of botName for avatar', () => {
+    render(<MessageBubble role="bot" content="Hi" botName="Test Bot" showAvatar />)
+    expect(screen.getByText('T')).toBeInTheDocument()
   })
 })

@@ -1,7 +1,29 @@
 // @vitest-environment jsdom
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeAll } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import Home from '../page'
+
+beforeAll(() => {
+  class MockIntersectionObserver {
+    callback: IntersectionObserverCallback
+    constructor(callback: IntersectionObserverCallback) {
+      this.callback = callback
+    }
+    observe(el: Element) {
+      this.callback(
+        [{ isIntersecting: true, target: el } as IntersectionObserverEntry],
+        this as unknown as IntersectionObserver
+      )
+    }
+    unobserve() {}
+    disconnect() {}
+    get root() { return null }
+    get rootMargin() { return '' }
+    get thresholds() { return [] as number[] }
+    takeRecords() { return [] as IntersectionObserverEntry[] }
+  }
+  vi.stubGlobal('IntersectionObserver', MockIntersectionObserver)
+})
 
 describe('Landing page', () => {
   it('renders the headline', () => {
@@ -20,7 +42,7 @@ describe('Landing page', () => {
   describe('nav bar', () => {
     it('renders logo text', () => {
       render(<Home />)
-      expect(screen.getByText('Sports Chatbot Portal')).toBeInTheDocument()
+      expect(screen.getAllByText('Sports Chatbot Portal').length).toBeGreaterThanOrEqual(1)
     })
 
     it('renders Log in and Get started links', () => {
@@ -37,6 +59,27 @@ describe('Landing page', () => {
       const hero = screen.getByRole('region', { name: /launch an ai stats chatbot/i })
       expect(within(hero).getByRole('link', { name: /get started free/i })).toHaveAttribute('href', '/signup')
       expect(within(hero).getByRole('link', { name: /log in/i })).toHaveAttribute('href', '/login')
+    })
+
+    it('renders the pill badge', () => {
+      render(<Home />)
+      expect(screen.getByText('Set up in 5 minutes')).toBeInTheDocument()
+    })
+
+    it('renders the chat mockup as decorative', () => {
+      render(<Home />)
+      const hero = screen.getByRole('region', { name: /launch an ai stats chatbot/i })
+      const mockup = within(hero).getByText('Premier League Bot').closest('[aria-hidden="true"]')
+      expect(mockup).toBeInTheDocument()
+    })
+  })
+
+  describe('stats bar', () => {
+    it('renders stat labels', () => {
+      render(<Home />)
+      expect(screen.getByText('Bots created')).toBeInTheDocument()
+      expect(screen.getByText('Messages sent')).toBeInTheDocument()
+      expect(screen.getByText('Avg setup time')).toBeInTheDocument()
     })
   })
 
@@ -79,9 +122,19 @@ describe('Landing page', () => {
     })
   })
 
-  it('renders the footer inside a footer element', () => {
-    render(<Home />)
-    const footer = screen.getByRole('contentinfo')
-    expect(within(footer).getByText(/built for league owners and team operators/i)).toBeInTheDocument()
+  describe('footer', () => {
+    it('renders inside a footer element with original text', () => {
+      render(<Home />)
+      const footer = screen.getByRole('contentinfo')
+      expect(within(footer).getByText(/built for league owners and team operators/i)).toBeInTheDocument()
+    })
+
+    it('renders footer column headings', () => {
+      render(<Home />)
+      const footer = screen.getByRole('contentinfo')
+      expect(within(footer).getByText('Product')).toBeInTheDocument()
+      expect(within(footer).getByText('Resources')).toBeInTheDocument()
+      expect(within(footer).getByText('Legal')).toBeInTheDocument()
+    })
   })
 })
