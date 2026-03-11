@@ -27,14 +27,8 @@
   --scrollbar-thumb-hover: #a8a29e;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0c0a09;
-    --foreground: #fafaf9;
-    --scrollbar-thumb: #44403c;
-    --scrollbar-thumb-hover: #57534e;
-  }
-}
+/* Dark mode disabled — app is light-only. Removing prevents embed iframe
+   from inheriting a near-black body background on dark-mode OS. */
 
 /* Smooth scroll */
 html {
