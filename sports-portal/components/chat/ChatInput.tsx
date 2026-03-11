@@ -21,13 +21,18 @@ export default function ChatInput({ onSend, disabled }: Props) {
     }
   }, [disabled])
 
-  // Auto-grow textarea height based on content
+  // Auto-grow textarea height based on content (min 44px to match send button)
   const adjustHeight = useCallback(() => {
     const textarea = textareaRef.current
     if (!textarea) return
-    textarea.style.height = 'auto'
+    // When empty, use fixed 44px — avoids scrollHeight collapsing in iframes
+    if (!textarea.value) {
+      textarea.style.height = '44px'
+      return
+    }
+    textarea.style.height = '44px'
     // Cap at ~5 lines (120px)
-    textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`
+    textarea.style.height = `${Math.max(44, Math.min(textarea.scrollHeight, 120))}px`
   }, [])
 
   useEffect(() => {
@@ -41,7 +46,7 @@ export default function ChatInput({ onSend, disabled }: Props) {
     setValue('')
     // Reset height after clearing
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto'
+      textareaRef.current.style.height = '44px'
     }
   }
 
@@ -68,7 +73,8 @@ export default function ChatInput({ onSend, disabled }: Props) {
           disabled={disabled}
           maxLength={MAX_LENGTH}
           rows={1}
-          className="flex-1 px-3 py-2.5 border border-neutral-200 rounded-2xl text-base text-neutral-900 resize-none focus:outline-none focus:ring-2 focus:ring-brand-500 disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-neutral-400 leading-relaxed"
+          style={{ height: '44px' }}
+          className="flex-1 min-h-[44px] px-3 py-2.5 border-2 border-neutral-300 rounded-2xl text-base text-neutral-900 resize-none focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-neutral-400 leading-relaxed"
         />
         <button
           type="button"
