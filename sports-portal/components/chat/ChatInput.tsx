@@ -68,7 +68,7 @@ export default function ChatInput({ onSend, disabled }: Props) {
           disabled={disabled}
           maxLength={MAX_LENGTH}
           rows={1}
-          className="flex-1 px-3 py-2.5 border border-neutral-200 rounded-2xl text-base text-gray-900 resize-none focus:outline-none focus:ring-2 focus:ring-brand-500 disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-neutral-400 leading-relaxed"
+          className="flex-1 px-3 py-2.5 border border-neutral-200 rounded-2xl text-base text-neutral-900 resize-none focus:outline-none focus:ring-2 focus:ring-brand-500 disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-neutral-400 leading-relaxed"
         />
         <button
           type="button"

@@ -6,7 +6,6 @@ import remarkGfm from 'remark-gfm'
 interface Props {
   role: 'user' | 'bot'
   content: string
-  isStreaming?: boolean
   botName?: string
   showAvatar?: boolean
 }

@@ -28,13 +28,17 @@ interface DashboardShellProps {
 export default function DashboardShell({ userEmail, children }: DashboardShellProps) {
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [collapsed, setCollapsed] = useState(() => {
+  const [collapsed, setCollapsed] = useState(false)
+
+  // Hydrate collapsed state from localStorage on mount (avoids SSR mismatch)
+  useEffect(() => {
     try {
-      return localStorage.getItem('sidebar-collapsed') === 'true'
+      const stored = localStorage.getItem('sidebar-collapsed')
+      if (stored === 'true') setCollapsed(true)
     } catch {
-      return false
+      // ignore
     }
-  })
+  }, [])
 
   useEffect(() => {
     try {

@@ -7,14 +7,7 @@ import ChatInput from './ChatInput'
 import TypingIndicator from './TypingIndicator'
 import WelcomeCard from './WelcomeCard'
 import ScrollToBottomFAB from './ScrollToBottomFAB'
-
-/** Returns true if the hex color has a perceived luminance > 0.5 (i.e. light background). */
-function isLightColor(hex: string): boolean {
-  const r = parseInt(hex.slice(1, 3), 16)
-  const g = parseInt(hex.slice(3, 5), 16)
-  const b = parseInt(hex.slice(5, 7), 16)
-  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.5
-}
+import { isLightColor } from '@/lib/color-utils'
 
 export interface Message {
   id: string
@@ -145,9 +138,24 @@ export default function ChatWindow({
       // Snapshot current messages NOW (before state updates) to build API history
       const currentMessages = messagesRef.current
 
-      // Append user message + empty bot placeholder in one update
+      // On the very first send, prepend the welcome message so it stays in the chat log
+      const welcomePrefix: Message[] =
+        currentMessages.length === 0
+          ? [
+              {
+                id: 'welcome',
+                role: 'bot',
+                content:
+                  welcomeMessage ||
+                  `Hi! Ask me anything about the ${leagueLabel}.`,
+              },
+            ]
+          : []
+
+      // Append welcome (if first), user message, and empty bot placeholder
       setMessages((prev) => [
         ...prev,
+        ...welcomePrefix,
         userMessage,
         { id: crypto.randomUUID(), role: 'bot', content: '' },
       ])
@@ -157,12 +165,15 @@ export default function ChatWindow({
       isNearBottomRef.current = true
 
       // Build the history to send to /api/chat:
+      //   - skip the UI-only welcome message (id='welcome')
       //   - append the new user message
       //   - map 'bot' → 'assistant' for OpenAI-compatible format
-      const apiHistory = [...currentMessages, userMessage].map((m) => ({
-        role: m.role === 'bot' ? ('assistant' as const) : ('user' as const),
-        content: m.content,
-      }))
+      const apiHistory = [...currentMessages, userMessage]
+        .filter((m) => m.id !== 'welcome')
+        .map((m) => ({
+          role: m.role === 'bot' ? ('assistant' as const) : ('user' as const),
+          content: m.content,
+        }))
 
       try {
         const res = await fetch('/api/chat', {
@@ -254,7 +265,7 @@ export default function ChatWindow({
         setIsStreaming(false)
       }
     },
-    [botId, isStreaming]
+    [botId, isStreaming, welcomeMessage, leagueLabel]
   )
 
   function handleChipClick(question: string) {

@@ -41,7 +41,7 @@ export default function StickyNav() {
           </Link>
           <Link
             href="/signup"
-            className="px-4 py-2 gradient-primary text-white rounded-lg hover:opacity-90 text-sm font-medium"
+            className="px-4 py-2 gradient-primary text-white rounded-lg hover:opacity-90 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
           >
             Get started free
           </Link>
