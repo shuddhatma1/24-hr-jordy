@@ -123,7 +123,14 @@
   window.addEventListener('resize', applyLayout);
   applyLayout();
 
-  // 10. Append to DOM
+  // 10. Listen for close-chat messages from the iframe
+  window.addEventListener('message', function (e) {
+    if (e.data && e.data.type === 'close-chat' && isOpen) {
+      toggle();
+    }
+  });
+
+  // 11. Append to DOM
   document.body.appendChild(panel);
   document.body.appendChild(bubble);
 })();

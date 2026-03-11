@@ -8,6 +8,12 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn() }),
 }))
 
+vi.mock('lucide-react', () => ({
+  MessageSquare: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="message-square-icon" {...props} />,
+  Users: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="users-icon" {...props} />,
+  TrendingUp: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="trending-up-icon" {...props} />,
+}))
+
 function mockFetch(status: number, body: unknown) {
   vi.stubGlobal(
     'fetch',

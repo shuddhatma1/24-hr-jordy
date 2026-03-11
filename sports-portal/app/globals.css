@@ -107,6 +107,17 @@ html {
     @apply backdrop-blur-xl bg-white/70 border border-white/20;
   }
 
+  /* Dot pattern background for hero */
+  .bg-dot-pattern {
+    background-image: radial-gradient(circle, rgba(99, 102, 241, 0.08) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* Radial glow for CTA section */
+  .bg-radial-glow {
+    background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+  }
+
   /* Shimmer skeleton loader */
   .skeleton {
     @apply bg-gradient-to-r from-neutral-200 via-neutral-100 to-neutral-200 bg-[length:200%_100%] animate-shimmer rounded;

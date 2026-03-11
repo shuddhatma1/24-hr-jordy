@@ -67,6 +67,7 @@ const config: Config = {
         "fade-in": "fadeIn 0.5s ease-out forwards",
         "slide-up": "slideUp 0.5s ease-out forwards",
         "slide-in-right": "slideInRight 0.4s ease-out forwards",
+        "slide-in-left": "slideInLeft 0.4s ease-out forwards",
         "scale-in": "scaleIn 0.3s ease-out forwards",
         shimmer: "shimmer 2s infinite linear",
         "bounce-dot": "bounceDot 1.4s infinite ease-in-out both",
@@ -82,6 +83,10 @@ const config: Config = {
         },
         slideInRight: {
           "0%": { opacity: "0", transform: "translateX(16px)" },
+          "100%": { opacity: "1", transform: "translateX(0)" },
+        },
+        slideInLeft: {
+          "0%": { opacity: "0", transform: "translateX(-16px)" },
           "100%": { opacity: "1", transform: "translateX(0)" },
         },
         scaleIn: {

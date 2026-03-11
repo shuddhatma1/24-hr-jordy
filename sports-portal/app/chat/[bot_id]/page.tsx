@@ -76,6 +76,7 @@ export default async function ChatPage({ params, searchParams }: PageProps) {
         welcomeMessage={bot.welcome_message}
         primaryColor={bot.primary_color}
         isEmbed={isEmbed}
+        sport={bot.sport}
       />
     )
   } catch {
@@ -85,8 +86,8 @@ export default async function ChatPage({ params, searchParams }: PageProps) {
 
 function BotNotFound() {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <p className="text-sm text-gray-600">
+    <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-4">
+      <p className="text-sm text-neutral-600">
         This chatbot doesn&apos;t exist or has been removed.
       </p>
     </div>
@@ -95,8 +96,8 @@ function BotNotFound() {
 
 function ServerError() {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <p className="text-sm text-gray-600">
+    <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-4">
+      <p className="text-sm text-neutral-600">
         Something went wrong. Please try again later.
       </p>
     </div>

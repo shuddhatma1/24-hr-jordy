@@ -9,6 +9,8 @@ import {
   SPORT_LABELS,
   LEAGUES_BY_SPORT,
 } from '@/lib/bot-registry'
+import DeleteBotModal from '@/components/dashboard/DeleteBotModal'
+import { AlertTriangle } from 'lucide-react'
 
 type PageStatus = 'loading' | 'noBotFound' | 'fetchError' | 'loaded'
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
@@ -134,12 +136,12 @@ export default function SettingsPage() {
   if (status === 'loading') {
     return (
       <div className="p-6 md:p-8 max-w-2xl">
-        <div className="h-7 w-32 bg-gray-200 rounded animate-pulse mb-2" />
-        <div className="h-4 w-56 bg-gray-200 rounded animate-pulse mb-8" />
+        <div className="h-7 w-32 bg-neutral-200 rounded animate-pulse mb-2" />
+        <div className="h-4 w-56 bg-neutral-200 rounded animate-pulse mb-8" />
         <div className="space-y-4">
-          <div className="h-10 bg-gray-200 rounded animate-pulse" />
-          <div className="h-10 bg-gray-200 rounded animate-pulse" />
-          <div className="h-10 w-36 bg-gray-200 rounded animate-pulse" />
+          <div className="h-10 bg-neutral-200 rounded animate-pulse" />
+          <div className="h-10 bg-neutral-200 rounded animate-pulse" />
+          <div className="h-10 w-36 bg-neutral-200 rounded animate-pulse" />
         </div>
       </div>
     )
@@ -148,10 +150,10 @@ export default function SettingsPage() {
   if (status === 'noBotFound') {
     return (
       <div className="p-6 md:p-8 max-w-2xl">
-        <h1 className="text-xl font-semibold text-gray-900 mb-1">Settings</h1>
-        <p className="text-sm text-gray-500 mt-4">
+        <h1 className="text-xl font-semibold text-neutral-900 mb-1">Settings</h1>
+        <p className="text-sm text-neutral-500 mt-4">
           You need to create a chatbot first.{' '}
-          <Link href="/dashboard" className="text-blue-600 hover:underline">
+          <Link href="/dashboard" className="text-brand-600 hover:underline">
             Go to dashboard
           </Link>
         </p>
@@ -162,7 +164,7 @@ export default function SettingsPage() {
   if (status === 'fetchError') {
     return (
       <div className="p-6 md:p-8 max-w-2xl">
-        <h1 className="text-xl font-semibold text-gray-900 mb-1">Settings</h1>
+        <h1 className="text-xl font-semibold text-neutral-900 mb-1">Settings</h1>
         <p className="text-sm text-red-600 mt-4">
           Failed to load settings. Please refresh the page.
         </p>
@@ -172,8 +174,8 @@ export default function SettingsPage() {
 
   return (
     <div className="p-6 md:p-8 max-w-2xl">
-      <h1 className="text-xl font-semibold text-gray-900 mb-1">Settings</h1>
-      <p className="text-sm text-gray-500 mb-8">
+      <h1 className="text-xl font-semibold text-neutral-900 mb-1">Settings</h1>
+      <p className="text-sm text-neutral-500 mb-8">
         Manage your chatbot configuration.
       </p>
 
@@ -183,7 +185,7 @@ export default function SettingsPage() {
           <div>
             <label
               htmlFor="sport-select"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-neutral-700 mb-1"
             >
               Sport
             </label>
@@ -191,7 +193,7 @@ export default function SettingsPage() {
               id="sport-select"
               value={sport}
               onChange={(e) => handleSportChange(e.target.value as Sport)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
             >
               {SUPPORTED_SPORTS.map((s) => (
                 <option key={s} value={s}>
@@ -204,7 +206,7 @@ export default function SettingsPage() {
           <div>
             <label
               htmlFor="league-select"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-neutral-700 mb-1"
             >
               League
             </label>
@@ -212,7 +214,7 @@ export default function SettingsPage() {
               id="league-select"
               value={league}
               onChange={(e) => setLeague(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
             >
               {LEAGUES_BY_SPORT[sport].map((l) => (
                 <option key={l.value} value={l.value}>
@@ -227,7 +229,7 @@ export default function SettingsPage() {
           <button
             type="submit"
             disabled={saveStatus === 'saving'}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="rounded-xl gradient-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
           >
             {saveStatus === 'saving' ? 'Saving...' : 'Save changes'}
           </button>
@@ -241,58 +243,36 @@ export default function SettingsPage() {
       </form>
 
       {/* Danger Zone */}
-      <section className="mt-10 border border-red-200 rounded-lg p-5">
-        <h2 className="text-base font-semibold text-red-700 mb-2">
-          Danger Zone
-        </h2>
-
-        {!showDeleteConfirm ? (
-          <>
-            <p className="text-sm text-gray-600 mb-4">
-              Permanently delete your chatbot and all associated knowledge
-              entries.
-            </p>
-            <button
-              type="button"
-              onClick={() => setShowDeleteConfirm(true)}
-              className="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-            >
-              Delete my chatbot
-            </button>
-          </>
-        ) : (
-          <div>
-            <p className="text-sm text-gray-700 mb-4">
-              This will permanently delete your chatbot and all knowledge
-              entries. This cannot be undone.
-            </p>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-              >
-                {isDeleting ? 'Deleting...' : 'Yes, delete everything'}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowDeleteConfirm(false)
-                  setDeleteError('')
-                }}
-                disabled={isDeleting}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-              >
-                Cancel
-              </button>
-            </div>
-            {deleteError && (
-              <p className="text-sm text-red-600 mt-3">{deleteError}</p>
-            )}
-          </div>
-        )}
+      <section className="mt-10 bg-red-50 border border-red-200 rounded-2xl p-6">
+        <div className="flex items-center gap-3 mb-2">
+          <AlertTriangle className="w-5 h-5 text-red-600" />
+          <h2 className="text-base font-semibold text-red-700">
+            Danger Zone
+          </h2>
+        </div>
+        <p className="text-sm text-neutral-600 mb-4">
+          Permanently delete your chatbot and all associated knowledge
+          entries.
+        </p>
+        <button
+          type="button"
+          onClick={() => setShowDeleteConfirm(true)}
+          className="rounded-xl border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+        >
+          Delete my chatbot
+        </button>
       </section>
+
+      <DeleteBotModal
+        isOpen={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false)
+          setDeleteError('')
+        }}
+        onConfirm={handleDelete}
+        isDeleting={isDeleting}
+        error={deleteError}
+      />
     </div>
   )
 }

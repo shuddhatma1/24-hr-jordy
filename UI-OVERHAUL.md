@@ -7,9 +7,9 @@
 | Phase | Description | Status |
 |-------|-------------|--------|
 | 1 | Design System Foundation | done |
-| 2 | Landing Page Redesign | not started |
-| 3 | Dashboard / Portal Modernization | not started |
-| 4 | Chatbot UI Redesign | not started |
+| 2 | Landing Page Redesign | done |
+| 3 | Dashboard / Portal Modernization | done |
+| 4 | Chatbot UI Redesign | done |
 | 5 | Mobile Chatbot Optimization | done |
 
 **Implementation order:** 1 → 5 → 4 → 2 → 3

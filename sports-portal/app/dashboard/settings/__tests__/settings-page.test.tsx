@@ -9,6 +9,11 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush }),
 }))
 
+vi.mock('lucide-react', () => ({
+  AlertTriangle: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="alert-triangle-icon" {...props} />,
+  X: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="x-icon" {...props} />,
+}))
+
 const MOCK_BOT = {
   bot_id: '507f1f77bcf86cd799439011',
   bot_name: 'Test Bot',
@@ -141,7 +146,7 @@ describe('SettingsPage', () => {
     expect(leagueSelect.value).toBe('nba')
   })
 
-  it('shows delete confirmation on click', async () => {
+  it('shows delete confirmation modal on click', async () => {
     mockFetch(200, MOCK_BOT)
     render(<SettingsPage />)
 
@@ -158,7 +163,7 @@ describe('SettingsPage', () => {
     ).toBeInTheDocument()
   })
 
-  it('hides confirmation on cancel', async () => {
+  it('hides confirmation modal on cancel', async () => {
     mockFetch(200, MOCK_BOT)
     render(<SettingsPage />)
 

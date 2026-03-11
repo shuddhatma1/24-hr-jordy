@@ -4,6 +4,10 @@ import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import CreateBotModal from '../CreateBotModal'
 
+vi.mock('lucide-react', () => ({
+  X: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="x-icon" {...props} />,
+}))
+
 const mockOnClose = vi.fn()
 const mockOnSuccess = vi.fn()
 
@@ -43,7 +47,8 @@ describe('CreateBotModal', () => {
       target: { value: 'My Bot' },
     })
     fireEvent.click(screen.getByRole('button', { name: /next/i }))
-    expect(screen.getByLabelText(/^sport$/i)).toBeInTheDocument()
+    // Step 2 shows sport cards with radio buttons
+    expect(screen.getByRole('radiogroup')).toBeInTheDocument()
   })
 
   it('advances to step 3 from step 2', () => {
@@ -74,7 +79,7 @@ describe('CreateBotModal', () => {
     fireEvent.click(screen.getByRole('button', { name: /next/i }))
     fireEvent.click(screen.getByRole('button', { name: /next/i }))
     fireEvent.click(screen.getByRole('button', { name: /back/i }))
-    expect(screen.getByLabelText(/^sport$/i)).toBeInTheDocument()
+    expect(screen.getByRole('radiogroup')).toBeInTheDocument()
   })
 
   it('calls onSuccess with bot data on successful submit', async () => {

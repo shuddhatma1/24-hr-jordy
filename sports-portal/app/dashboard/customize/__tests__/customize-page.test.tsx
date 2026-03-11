@@ -112,10 +112,10 @@ describe('CustomizePage', () => {
 
     const friendlyBtn = screen.getByRole('button', { name: /friendly/i })
     // starts selected (from mockBot.persona = 'friendly')
-    expect(friendlyBtn).toHaveClass('border-blue-500')
+    expect(friendlyBtn).toHaveClass('border-brand-500')
     // click to deselect
     fireEvent.click(friendlyBtn)
-    expect(friendlyBtn).not.toHaveClass('border-blue-500')
+    expect(friendlyBtn).not.toHaveClass('border-brand-500')
   })
 
   it('selecting a different persona highlights only that one', async () => {
@@ -124,7 +124,7 @@ describe('CustomizePage', () => {
     await waitFor(() => expect(screen.getByDisplayValue('City FC Bot')).toBeInTheDocument())
 
     fireEvent.click(screen.getByRole('button', { name: /enthusiastic/i }))
-    expect(screen.getByRole('button', { name: /enthusiastic/i })).toHaveClass('border-blue-500')
-    expect(screen.getByRole('button', { name: /friendly/i })).not.toHaveClass('border-blue-500')
+    expect(screen.getByRole('button', { name: /enthusiastic/i })).toHaveClass('border-brand-500')
+    expect(screen.getByRole('button', { name: /friendly/i })).not.toHaveClass('border-brand-500')
   })
 })

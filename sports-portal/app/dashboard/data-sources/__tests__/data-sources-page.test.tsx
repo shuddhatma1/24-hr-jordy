@@ -9,6 +9,16 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush }),
 }))
 
+vi.mock('lucide-react', () => ({
+  FileText: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="file-text-icon" {...props} />,
+  Upload: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="upload-icon" {...props} />,
+  Trash2: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="trash-icon" {...props} />,
+  ChevronDown: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="chevron-down-icon" {...props} />,
+  ChevronUp: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="chevron-up-icon" {...props} />,
+  File: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="file-icon" {...props} />,
+  FileSpreadsheet: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="file-spreadsheet-icon" {...props} />,
+}))
+
 beforeAll(() => {
   Element.prototype.scrollIntoView = vi.fn()
 })
@@ -94,12 +104,22 @@ describe('DataSourcesPage', () => {
     )
   })
 
-  it('renders FAQ entries in FAQ tab by default', async () => {
+  it('renders FAQ entry titles in FAQ tab by default', async () => {
     stubFetch(okResponse([mockFaqEntry]))
     render(<DataSourcesPage />)
     await waitFor(() =>
       expect(screen.getByText('How to buy tickets?')).toBeInTheDocument()
     )
+  })
+
+  it('shows FAQ content when expanded', async () => {
+    stubFetch(okResponse([mockFaqEntry]))
+    render(<DataSourcesPage />)
+    await waitFor(() =>
+      expect(screen.getByText('How to buy tickets?')).toBeInTheDocument()
+    )
+    // Click to expand
+    fireEvent.click(screen.getByText('How to buy tickets?'))
     expect(screen.getByText(/Visit the official website/)).toBeInTheDocument()
   })
 
@@ -208,6 +228,8 @@ describe('DataSourcesPage', () => {
     render(<DataSourcesPage />)
     await waitFor(() => screen.getByText('How to buy tickets?'))
 
+    // Expand the FAQ entry first to see the delete button
+    fireEvent.click(screen.getByText('How to buy tickets?'))
     fireEvent.click(screen.getByRole('button', { name: /delete how to buy tickets/i }))
 
     await waitFor(() =>
@@ -224,6 +246,8 @@ describe('DataSourcesPage', () => {
     render(<DataSourcesPage />)
     await waitFor(() => screen.getByText('How to buy tickets?'))
 
+    // Expand the FAQ entry first to see the delete button
+    fireEvent.click(screen.getByText('How to buy tickets?'))
     fireEvent.click(screen.getByRole('button', { name: /delete how to buy tickets/i }))
 
     await waitFor(() => expect(screen.getByText('Not found')).toBeInTheDocument())
