@@ -27,9 +27,6 @@
   --scrollbar-thumb-hover: #a8a29e;
 }
 
-/* Dark mode disabled — app is light-only. Removing prevents embed iframe
-   from inheriting a near-black body background on dark-mode OS. */
-
 /* Smooth scroll */
 html {
   scroll-behavior: smooth;

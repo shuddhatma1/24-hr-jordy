@@ -4,9 +4,9 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { SPORT_LABELS, LEAGUES_BY_SPORT, type Sport } from '@/lib/bot-registry'
 import CreateBotModal, { type BotData as BaseBotData } from '@/components/dashboard/CreateBotModal'
+import { Copy, Check, ExternalLink, Link2, Code, Bot } from 'lucide-react'
 
 type BotData = BaseBotData & { primary_color?: string | null }
-import { Copy, Check, ExternalLink, Link2, Code, Bot } from 'lucide-react'
 
 function getChatUrl(botId: string): string | null {
   const base = (process.env.NEXT_PUBLIC_APP_URL ?? '').replace(/\/$/, '')
@@ -16,7 +16,8 @@ function getChatUrl(botId: string): string | null {
 function getEmbedCode(botId: string, primaryColor?: string | null): string | null {
   const base = (process.env.NEXT_PUBLIC_APP_URL ?? '').replace(/\/$/, '')
   if (!base) return null
-  const colorAttr = primaryColor ? ` data-color="${primaryColor}"` : ''
+  const safeColor = primaryColor && /^#[0-9A-Fa-f]{6}$/.test(primaryColor) ? primaryColor : null
+  const colorAttr = safeColor ? ` data-color="${safeColor}"` : ''
   return `<script src="${base}/widget.js" data-bot-id="${botId}"${colorAttr}></script>`
 }
 

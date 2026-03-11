@@ -71,6 +71,7 @@
       if (bot.primary_color && !script.getAttribute('data-color')) {
         brandColor = bot.primary_color;
         bubble.style.backgroundColor = brandColor;
+        spinner.style.borderTopColor = brandColor;
       }
       // Replace generic chat icon with sport emoji
       var emoji = SPORT_EMOJIS[bot.sport] || '\uD83D\uDCAC';
@@ -80,10 +81,8 @@
         '</span>';
       if (!isOpen) {
         bubble.innerHTML = openIcon;
-        bubble.setAttribute(
-          'aria-label',
-          'Chat with ' + (bot.bot_name || 'bot')
-        );
+        var label = (bot.bot_name || 'bot').slice(0, 100);
+        bubble.setAttribute('aria-label', 'Chat with ' + label);
       }
     })
     .catch(function () {
@@ -130,14 +129,14 @@
     border: '3px solid #e5e7eb',
     borderTopColor: brandColor,
     borderRadius: '50%',
-    animation: 'widget-spin 0.8s linear infinite',
+    animation: '__jordy-widget-spin 0.8s linear infinite',
   });
   loader.appendChild(spinner);
 
   // Inject spinner keyframes
   var styleEl = document.createElement('style');
   styleEl.textContent =
-    '@keyframes widget-spin{to{transform:rotate(360deg)}}';
+    '@keyframes __jordy-widget-spin{to{transform:rotate(360deg)}}';
   document.head.appendChild(styleEl);
 
   panel.appendChild(loader);
