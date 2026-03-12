@@ -60,12 +60,15 @@
   });
   bubble.innerHTML = openIcon;
 
-  // 7. Fetch bot config to personalize bubble (non-blocking, best-effort)
-  fetch(baseUrl + '/api/bots/' + encodeURIComponent(botId))
+  // 7. Fetch bot config to personalize bubble (non-blocking, best-effort, 5s timeout)
+  var fetchCtrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  var fetchTimer = fetchCtrl ? setTimeout(function () { fetchCtrl.abort(); }, 5000) : null;
+  fetch(baseUrl + '/api/bots/' + encodeURIComponent(botId), fetchCtrl ? { signal: fetchCtrl.signal } : {})
     .then(function (r) {
       return r.ok ? r.json() : null;
     })
     .then(function (bot) {
+      if (fetchTimer) clearTimeout(fetchTimer);
       if (!bot) return;
       // Apply brand color (API overrides data-color attr unless already set by user)
       if (bot.primary_color && !script.getAttribute('data-color')) {
@@ -133,11 +136,14 @@
   });
   loader.appendChild(spinner);
 
-  // Inject spinner keyframes
-  var styleEl = document.createElement('style');
-  styleEl.textContent =
-    '@keyframes __jordy-widget-spin{to{transform:rotate(360deg)}}';
-  document.head.appendChild(styleEl);
+  // Inject spinner keyframes (guard against duplicate injection on SPA re-navigation)
+  if (!document.getElementById('__jordy-widget-style')) {
+    var styleEl = document.createElement('style');
+    styleEl.id = '__jordy-widget-style';
+    styleEl.textContent =
+      '@keyframes __jordy-widget-spin{to{transform:rotate(360deg)}}';
+    document.head.appendChild(styleEl);
+  }
 
   panel.appendChild(loader);
 
