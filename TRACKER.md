@@ -10,7 +10,7 @@
 |---|---|
 | GitHub | https://github.com/shuddhatma1/24-hr-jordy.git |
 | Netlify URL | https://jordy-self-serviceable.netlify.app |
-| Last deployed | 2026-03-11 (M15 analytics dashboard, PR #16 merged) |
+| Last deployed | 2026-03-12 (embed widget UX fixes, PR #19 merged + follow-up hardening) |
 
 ---
 
@@ -34,6 +34,8 @@
 | Gemini | Real Bot Integration | **done** | `main` | Yes | Gemini 2.0 Flash + Google Search; direct SDK call in `/api/chat`; `@google/generative-ai` |
 | M14 | Landing Page | done | `feat/m14-landing` | Yes | PR #15 merged 2026-03-11; hero, how-it-works, features, accessibility fixes; 249 tests |
 | M15 | Analytics Dashboard | done | `feat/m15-analytics` | Yes | PR #16 merged 2026-03-11; ChatEvent model, /api/analytics, stat cards + bar chart; 264 tests |
+| UI Overhaul | Phases 1–5 | done | `feat/ui-overhaul-phases-2-3-4` | Yes | PR #17 + #18 merged 2026-03-11; design system, landing, dashboard, chat, mobile; 306 tests |
+| Embed Fix | Widget UX | done | `fix/embed-widget-ux` | Yes | PR #19 merged 2026-03-12; black patch, scroll, input, personalization, CORS, XSS guard, a11y |
 
 ---
 
@@ -154,6 +156,7 @@
 | 2026-03-10 | M13 | Settings + Embed — change league, delete bot, widget.js embed script, ?embed=true chat mode; 249 tests | triggered |
 | 2026-03-11 | M14 | Landing Page — hero, how-it-works, feature highlights, bottom CTA, footer; accessibility (skip-to-content, aria-labelledby, landmark tests); 249 tests | triggered |
 | 2026-03-11 | M15 | Analytics Dashboard — ChatEvent model (90d TTL, no content), fire-and-forget logging, /api/analytics (totals + daily + period), stat cards + bar chart, sidebar activated; 264 tests | triggered |
+| 2026-03-11 | UI Overhaul (Phases 2–4) | Landing redesign (StickyNav, ScrollReveal, AnimatedCounter, bento grid), dashboard redesign (collapsible sidebar, ChatPreview, pill tabs, gradient chart, DeleteBotModal), chat redesign (TypingIndicator, WelcomeCard, ScrollToBottomFAB, markdown rendering). PR review fix commit: postMessage security, SSR hydration, welcome msg UX, DRY color-utils, dead code, a11y, consistency, layout; 306 tests | triggered |
 
 ---
 

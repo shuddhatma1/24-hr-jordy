@@ -93,8 +93,10 @@ A self-serve portal where sports league owners sign up, configure an AI stats ch
 | M13 — Settings + Embed Widget | done | `feat/m13-settings-embed` | #14 merged 2026-03-10 |
 | M14 — Landing Page | done | `feat/m14-landing` | #15 merged 2026-03-11 |
 | M15 — Analytics Dashboard | done | `feat/m15-analytics` | #16 merged 2026-03-11 |
+| UI Overhaul (Phases 2–4) | done | `feat/ui-overhaul-phases-2-3-4` | #18 merged 2026-03-11 |
+| Embed Widget UX Fix | done | `fix/embed-widget-ux` | #19 merged 2026-03-12 |
 
-**M1–M15 complete.**
+**M1–M15 + UI Overhaul + Embed Fix complete.**
 
 ---
 
@@ -164,6 +166,7 @@ sports-portal/
 │   ├── mongodb.ts
 │   ├── auth-helpers.ts
 │   ├── bot-registry.ts
+│   ├── color-utils.ts              # [UI] isLightColor() — shared by ChatWindow + ChatPreview
 │   └── models/
 │       ├── User.ts
 │       ├── Bot.ts                  # [M11] +welcome_message, +persona, +primary_color (optional)
